@@ -14,23 +14,65 @@ export default function HomePage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [mode, setMode] = useState("chat");
-  const [model, setModel] = useState("Đọc từ máy chủ");
+  const [model] = useState("Đọc từ máy chủ");
+  const [authStatus, setAuthStatus] = useState("checking");
+  const [authConfigured, setAuthConfigured] = useState(true);
+  const [password, setPassword] = useState("");
+  const [authError, setAuthError] = useState("");
   const endRef = useRef(null);
   const abortRef = useRef(null);
+
+  useEffect(() => {
+    fetch("/api/auth/session", { cache: "no-store" })
+      .then(async response => {
+        const result = await response.json().catch(() => ({}));
+        setAuthConfigured(result.configured !== false && response.status !== 503);
+        setAuthStatus(result.authenticated ? "ready" : "locked");
+      })
+      .catch(() => {
+        setAuthConfigured(false);
+        setAuthStatus("locked");
+      });
+  }, []);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  async function login(event) {
+    event.preventDefault();
+    setAuthError("");
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ password })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Không thể đăng nhập.");
+      setPassword("");
+      setAuthStatus("ready");
+    } catch (err) {
+      setAuthError(err.message || "Không thể đăng nhập.");
+    }
+  }
+
+  async function logout() {
+    abortRef.current?.abort();
+    await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    setMessages([]);
+    setBusy(false);
+    setAuthStatus("locked");
+  }
+
   async function sendMessage(value = input) {
     const content = value.trim();
-    if (!content || busy) return;
+    if (!content || busy || authStatus !== "ready") return;
     const next = [...messages, { role: "user", content }];
-    setMessages(next);
+    setMessages([...next, { role: "assistant", content: "" }]);
     setInput("");
     setError("");
     setBusy(true);
-    setMessages([...next, { role: "assistant", content: "" }]);
     const controller = new AbortController();
     abortRef.current = controller;
 
@@ -43,6 +85,7 @@ export default function HomePage() {
       });
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
+        if (response.status === 401) setAuthStatus("locked");
         throw new Error(payload.error || `Yêu cầu thất bại (HTTP ${response.status}).`);
       }
       if (!response.body) throw new Error("Máy chủ không trả về luồng dữ liệu.");
@@ -73,6 +116,28 @@ export default function HomePage() {
     setError("");
   }
 
+  if (authStatus === "checking") {
+    return <main className="auth-screen"><div className="auth-card"><div className="welcome-orb">W</div><p>Đang kiểm tra phiên đăng nhập…</p></div></main>;
+  }
+
+  if (authStatus !== "ready") {
+    return (
+      <main className="auth-screen">
+        <form className="auth-card" onSubmit={login}>
+          <div className="welcome-orb">W</div>
+          <p className="eyebrow">PRIVATE WORKSPACE</p>
+          <h1>Wake AI</h1>
+          <p className="auth-description">{authConfigured ? "Đăng nhập để truy cập không gian làm việc riêng." : "Máy chủ chưa được cấu hình. Hãy thêm WAKE_ACCESS_PASSWORD và WAKE_SESSION_SECRET trong phần Environment Variables của hosting."}</p>
+          {authConfigured && <>
+            <input className="auth-input" type="password" autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} placeholder="Mật khẩu truy cập" required />
+            {authError && <div className="error-banner">{authError}</div>}
+            <button className="primary-button auth-submit" type="submit">Đăng nhập</button>
+          </>}
+        </form>
+      </main>
+    );
+  }
+
   return (
     <main className="shell">
       <aside className="sidebar">
@@ -83,7 +148,7 @@ export default function HomePage() {
         <button className={mode === "code" ? "nav-item active" : "nav-item"} onClick={() => setMode("code")}><span>⌘</span> Coding Workspace <span className="soon">Sắp tới</span></button>
         <div className="side-label lower">PROJECT</div>
         <div className="project-card"><span className="project-dot" /> Wake-AI <small>GitHub</small></div>
-        <div className="sidebar-bottom"><div className="avatar">W</div><div><strong>W / Wake</strong><small>Personal workspace</small></div><span className="settings">⚙</span></div>
+        <div className="sidebar-bottom"><div className="avatar">W</div><div><strong>W / Wake</strong><small>Personal workspace</small></div><button className="logout-button" onClick={logout}>Đăng xuất</button></div>
       </aside>
 
       <section className="main-panel">
