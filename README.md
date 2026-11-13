@@ -1,23 +1,38 @@
 # Wake AI
 
-Personal AI coding agent for Wake. The first milestone is a lightweight terminal chat client designed to run in Termux and connect to any OpenAI-compatible model endpoint.
+Wake AI is a responsive hybrid AI workspace: a chat-first web interface with a coding workspace planned as the next milestone. It is designed to grow into a development and management hub for the Wake Discord bot.
+
+## Current status
+
+- [x] Responsive Vietnamese-first web chat UI
+- [x] Server-side OpenAI-compatible streaming gateway
+- [x] Reuses the existing model provider and environment configuration
+- [x] Keeps the CLI available as an optional tool
+- [ ] Persistent web conversations and user accounts
+- [ ] GitHub repository browser and project indexing
+- [ ] Code editor, proposed diffs and approval flow
+- [ ] Isolated command runner and tests
+- [ ] Bot management and deployment dashboard
+
+This is an early web foundation, not yet an autonomous coding agent or a production-ready public service.
 
 ## Requirements
 
-- Node.js 22.12 or newer
-- An OpenAI-compatible chat-completions endpoint
-- A model served by that endpoint
+- Node.js 22.12+
+- npm
+- An OpenAI-compatible chat-completions endpoint reachable from the server
 
-## Quick start
+## Setup
 
 ```bash
 git clone https://github.com/nhattruongnc23-lang/Wake-AI.git
 cd Wake-AI
-git switch feat/wake-cli-foundation
+git switch feat/wake-web-foundation
+npm install
 cp .env.example .env
 ```
 
-Edit `.env` and set the endpoint and model:
+Edit `.env` on the server:
 
 ```env
 WAKE_BASE_URL=http://127.0.0.1:8080/v1
@@ -25,35 +40,36 @@ WAKE_MODEL=your-model-name
 WAKE_API_KEY=
 ```
 
-Then run:
+Start the website:
 
 ```bash
-npm start
+npm run dev
 ```
 
-The default endpoint is a local llama.cpp-compatible server. For a remote provider, set its OpenAI-compatible base URL and keep any API key only in your local `.env` file. Never commit that file.
+Open `http://localhost:3000`. For a production build use `npm run build` then `npm start`.
 
-## CLI commands
+The default model URL is suitable only when a compatible model server runs on the same machine. When deployed elsewhere, configure a reachable model endpoint. API keys stay on the server and are never sent to the browser.
 
-- `/help` — show commands
-- `/model` — show the current model
-- `/model NAME` — switch model for the current session
-- `/clear` — clear saved conversation history
-- `/exit` — exit
+## Optional CLI
 
-Conversation history is stored locally in `.wake/sessions/` and is excluded from Git.
+The original terminal client remains available:
 
-## Development
+```bash
+npm run cli
+```
+
+## Validation
 
 ```bash
 npm test
 npm run check
+npm run build
 ```
 
-## Project status
+## Security and deployment
 
-This is the initial CLI and model-gateway foundation, not yet an autonomous coding agent. Repository editing, diff approval, controlled command execution, GitHub workflows, and resumable cloud jobs are planned in [docs/ROADMAP.md](docs/ROADMAP.md).
+This prototype does not yet include user authentication, persistent multi-user storage, or robust rate limiting. Keep it local or behind a trusted private access layer. Do not publish it as an open endpoint until authentication, abuse protection, and deployment secrets are configured.
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/AGENT_RULES.md](docs/AGENT_RULES.md).
+Never commit `.env`, model API keys, GitHub tokens, or conversation data. Never let an agent execute arbitrary repository commands on the web server; future coding tasks must run in an isolated worker and require review before repository writes.
 
-All infrastructure choices are being evaluated against the 0-VND target. Free-tier quotas and availability must be verified; always-on GPU inference is not assumed.
+See `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, and `docs/AGENT_RULES.md`.
