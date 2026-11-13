@@ -1,16 +1,27 @@
 import { getConfig } from "../../../src/config.js";
 import { streamChatCompletion } from "../../../src/providers/openai-compatible.js";
+import { authConfigured, clientKey, consumeRateLimit, hasValidSession, isSameOrigin } from "../../../src/web/auth.js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_MESSAGES = 24;
 const MAX_MESSAGE_LENGTH = 16_000;
+const MAX_BODY_BYTES = 400_000;
 
 export async function POST(request) {
+  if (!authConfigured()) return Response.json({ error: "Máy chủ chưa cấu hình xác thực." }, { status: 503 });
+  if (!hasValidSession(request)) return Response.json({ error: "Phiên đăng nhập đã hết hạn." }, { status: 401 });
+  if (!isSameOrigin(request)) return Response.json({ error: "Yêu cầu không hợp lệ." }, { status: 403 });
+  if (!consumeRateLimit(`chat:${clientKey(request)}`, 12, 60 * 1000)) {
+    return Response.json({ error: "Bạn gửi yêu cầu quá nhanh. Hãy chờ một phút rồi thử lại." }, { status: 429 });
+  }
+
   let payload;
   try {
-    payload = await request.json();
+    const raw = await request.text();
+    if (new TextEncoder().encode(raw).byteLength > MAX_BODY_BYTES) return Response.json({ error: "Nội dung gửi lên quá lớn." }, { status: 413 });
+    payload = JSON.parse(raw);
   } catch {
     return Response.json({ error: "Dữ liệu gửi lên không hợp lệ." }, { status: 400 });
   }
@@ -35,13 +46,11 @@ export async function POST(request) {
         for await (const token of streamChatCompletion({
           config,
           messages: [{ role: "system", content: config.systemPrompt }, ...messages]
-        })) {
-          controller.enqueue(encoder.encode(token));
-        }
+        })) controller.enqueue(encoder.encode(token));
         controller.close();
-      } catch (error) {
-        // Do not expose provider URLs, credentials, or raw upstream errors to browsers.
-        controller.error(new Error(error instanceof Error ? error.message : "Model request failed."));
+      } catch {
+        // Never forward provider URLs, upstream response bodies, or secrets to the browser.
+        controller.error(new Error("Không thể kết nối mô hình AI. Hãy kiểm tra cấu hình máy chủ."));
       }
     }
   });
