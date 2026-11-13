@@ -1,0 +1,23 @@
+{
+  "name": "wake-ai",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Personal AI workspace and coding agent for Wake",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "cli": "node src/cli/index.js",
+    "test": "node --test",
+    "check": "node --check app/api/chat/route.js && node --check src/cli/index.js && node --check src/providers/openai-compatible.js && node --check src/config.js"
+  },
+  "dependencies": {
+    "next": "^15.5.6",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  }
+}
