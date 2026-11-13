@@ -13,7 +13,7 @@
     "start": "next start",
     "cli": "node src/cli/index.js",
     "test": "node --test",
-    "check": "node --check app/page.js && node --check app/api/chat/route.js && node --check src/cli/index.js && node --check src/providers/openai-compatible.js"
+    "check": "node --check app/api/chat/route.js && node --check src/cli/index.js && node --check src/providers/openai-compatible.js && node --check src/config.js"
   },
   "dependencies": {
     "next": "^15.5.6",
