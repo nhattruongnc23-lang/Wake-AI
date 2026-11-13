@@ -1,0 +1,16 @@
+{
+  "name": "wake-ai",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Personal AI coding agent for Wake",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "start": "node src/cli/index.js",
+    "dev": "node --watch src/cli/index.js",
+    "test": "node --test",
+    "check": "node --check src/cli/index.js && node --check src/providers/openai-compatible.js"
+  }
+}
