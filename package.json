@@ -19,6 +19,6 @@
     "next": "^15.5.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "@fontsource-variable/be-vietnam-pro": "^5.2.6"
+    "@fontsource/be-vietnam-pro": "^5.3.0"
   }
 }
