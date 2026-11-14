@@ -1,4 +1,4 @@
-@import "@fontsource-variable/be-vietnam-pro";
+@import "@fontsource/be-vietnam-pro";
 
 500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap");
 
@@ -73,7 +73,7 @@ button{cursor:pointer}
 .primary-button{margin-top:17px;padding:10px 15px;border:0;border-radius:9px;background:#9c83e8;color:#171126;font-weight:700;font-size:12px}
 /* Mobile typography uses a bundled Vietnamese-first font; desktop keeps its existing pairing. */
 @media(max-width:760px){
-  html,body{font-family:"Be Vietnam Pro Variable","Be Vietnam Pro",sans-serif}
+  html,body{font-family:"Be Vietnam Pro",sans-serif}
   .shell{display:block;min-height:100dvh;padding-bottom:calc(68px + env(safe-area-inset-bottom))}
   .sidebar{position:fixed;z-index:20;left:0;right:0;bottom:0;width:auto;height:calc(64px + env(safe-area-inset-bottom));padding:7px 10px env(safe-area-inset-bottom);border-right:0;border-top:1px solid var(--line);display:flex;flex-direction:row;align-items:center;justify-content:space-around;gap:5px;background:#0c0f15}
   .brand{padding:0;gap:0;flex:0 0 auto}
