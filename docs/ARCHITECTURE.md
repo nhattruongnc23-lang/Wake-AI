@@ -7,6 +7,7 @@
 - **Chat API** — validates incoming message history and streams model output from the server.
 - **Model gateway** — shared OpenAI-compatible provider in `src/providers/openai-compatible.js`.
 - **Configuration** — shared environment configuration in `src/config.js`.
+- **Model health** — authenticated `GET /api/health/model` checks whether the configured OpenAI-compatible provider is reachable without exposing endpoint URLs or credentials.
 - **CLI** — retained as an optional interface; it is no longer the main product surface.
 
 ## Request flow
@@ -17,7 +18,7 @@
 4. The shared provider streams model tokens to the browser.
 5. The browser renders tokens as they arrive.
 
-The browser never receives the model API key. The server must be able to reach the configured model endpoint.
+The browser never receives the model API key. The server must be able to reach the configured model endpoint. On Vercel, a loopback endpoint such as `127.0.0.1` is detected as unconfigured because it refers to the Vercel runtime, not a separate model host.
 
 ## Planned modules
 
