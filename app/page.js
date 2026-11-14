@@ -14,6 +14,7 @@ export default function HomePage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [mode, setMode] = useState("chat");
+  const [menuOpen, setMenuOpen] = useState(false);
   const [model] = useState("Đọc từ máy chủ");
   const [authStatus, setAuthStatus] = useState("checking");
   const [authConfigured, setAuthConfigured] = useState(true);
@@ -140,12 +141,13 @@ export default function HomePage() {
 
   return (
     <main className="shell">
-      <aside className="sidebar">
+      {menuOpen && <button className="mobile-menu-backdrop" aria-label="Đóng menu" onClick={() => setMenuOpen(false)} />}
+      <aside className={menuOpen ? "sidebar mobile-open" : "sidebar"}>
         <a className="brand" href="#"><span className="brand-mark">W</span><span>Wake<span className="muted"> AI</span></span></a>
-        <button className="new-chat" onClick={clearChat}><span>＋</span> Cuộc trò chuyện mới</button>
+        <button className="new-chat" onClick={() => { clearChat(); setMenuOpen(false); }}><span>＋</span> Cuộc trò chuyện mới</button>
         <div className="side-label">WORKSPACE</div>
-        <button className={mode === "chat" ? "nav-item active" : "nav-item"} onClick={() => setMode("chat")}><span>◈</span> AI Chat</button>
-        <button className={mode === "code" ? "nav-item active" : "nav-item"} onClick={() => setMode("code")}><span>⌘</span> Coding Workspace <span className="soon">Sắp tới</span></button>
+        <button className={mode === "chat" ? "nav-item active" : "nav-item"} onClick={() => { setMode("chat"); setMenuOpen(false); }}><span>◈</span> AI Chat</button>
+        <button className={mode === "code" ? "nav-item active" : "nav-item"} onClick={() => { setMode("code"); setMenuOpen(false); }}><span>⌘</span> Coding Workspace <span className="soon">Sắp tới</span></button>
         <div className="side-label lower">PROJECT</div>
         <div className="project-card"><span className="project-dot" /> Wake-AI <small>GitHub</small></div>
         <div className="sidebar-bottom"><div className="avatar">W</div><div><strong>W / Wake</strong><small>Personal workspace</small></div><button className="logout-button" onClick={logout}>Đăng xuất</button></div>
@@ -153,6 +155,7 @@ export default function HomePage() {
 
       <section className="main-panel">
         <header className="topbar">
+          <button className="mobile-menu-button" aria-label="Mở menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(true)}>☰</button>
           <div className="breadcrumb">Workspace <span>/</span> <strong>{mode === "chat" ? "AI Chat" : "Coding Workspace"}</strong></div>
           <div className="top-actions"><span className="status-dot" /> <span>Model Gateway</span><span className="model-pill">{model}</span></div>
         </header>
