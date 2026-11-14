@@ -1,4 +1,6 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap");
+@import "@fontsource-variable/be-vietnam-pro";
+
+500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap");
 
 :root{color-scheme:dark;--bg:#090b10;--panel:#0e1118;--panel-2:#121722;--line:#202633;--text:#edf0f6;--muted:#8992a3;--accent:#a78bfa;--accent-2:#7c5ce7}
 *{box-sizing:border-box}
@@ -69,8 +71,45 @@ button{cursor:pointer}
 .coming-icon{margin:0 auto 20px;width:58px;height:58px;display:grid;place-items:center;border:1px solid #4b3d70;border-radius:18px;background:#19152a;color:#c8b5ff;font-size:26px}
 .coming-soon>p:not(.eyebrow){color:#8d96a7;font-size:13px;line-height:1.8}
 .primary-button{margin-top:17px;padding:10px 15px;border:0;border-radius:9px;background:#9c83e8;color:#171126;font-weight:700;font-size:12px}
-@media(max-width:760px){.sidebar{width:62px;padding:17px 8px}.brand{justify-content:center;padding:0 0 27px}.brand>span:last-child,.new-chat,.side-label,.nav-item:not(.active),.nav-item.active{font-size:0}.nav-item{justify-content:center;padding:12px 0}.nav-item>span:first-child{font-size:18px}.project-card{font-size:0;padding:12px 0;text-align:center}.project-card small{display:none}.project-dot{margin:0}.sidebar-bottom{justify-content:center}.sidebar-bottom>div:not(.avatar),.settings{display:none}.topbar{padding:0 16px;height:57px}.top-actions>span:not(.status-dot):not(.model-pill){display:none}.chat-layout{padding:0 15px}.suggestions{grid-template-columns:1fr;max-width:440px}.suggestions button{min-height:53px}.welcome{padding-top:34px}.welcome h1{font-size:31px}.composer-wrap{padding-bottom:13px}}
-@media(max-width:420px){.model-pill{display:none}.sidebar{width:54px}.chat-layout{padding:0 11px}.welcome-sub{font-size:12px}}
+/* Mobile typography uses a bundled Vietnamese-first font; desktop keeps its existing pairing. */
+@media(max-width:760px){
+  html,body{font-family:"Be Vietnam Pro Variable","Be Vietnam Pro",sans-serif}
+  .shell{display:block;min-height:100dvh;padding-bottom:calc(68px + env(safe-area-inset-bottom))}
+  .sidebar{position:fixed;z-index:20;left:0;right:0;bottom:0;width:auto;height:calc(64px + env(safe-area-inset-bottom));padding:7px 10px env(safe-area-inset-bottom);border-right:0;border-top:1px solid var(--line);display:flex;flex-direction:row;align-items:center;justify-content:space-around;gap:5px;background:#0c0f15}
+  .brand{padding:0;gap:0;flex:0 0 auto}
+  .brand-mark{width:36px;height:36px}
+  .brand>span:last-child,.new-chat,.side-label,.project-card,.sidebar-bottom{display:none}
+  .nav-item,.nav-item.active{width:auto;min-width:54px;min-height:44px;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:5px 8px;font-size:10px;text-align:center}
+  .nav-item>span:first-child{width:auto;font-size:17px}
+  .nav-item .soon{display:none}
+  .main-panel{min-height:calc(100dvh - 68px);padding-bottom:0}
+  .topbar{padding:0 14px;height:54px}
+  .top-actions>span:not(.status-dot):not(.model-pill){display:none}
+  .chat-layout{width:100%;padding:0 14px}
+  .chat-scroll{overscroll-behavior:contain}
+  .suggestions{grid-template-columns:1fr;max-width:100%;gap:8px}
+  .suggestions button{min-height:54px;font-size:13px;padding:13px 30px 13px 14px}
+  .welcome{padding:32px 0 22px;justify-content:center}
+  .welcome h1{font-size:clamp(28px,7vw,35px);letter-spacing:-1px}
+  .welcome-sub{font-size:13px;line-height:1.75;padding:0 8px}
+  .composer-wrap{position:sticky;bottom:calc(64px + env(safe-area-inset-bottom));padding:12px 0 10px;background:linear-gradient(transparent,var(--bg) 16%)}
+  .composer{border-radius:16px;padding:12px}
+  .composer textarea{font-size:16px;line-height:1.55;min-height:48px;max-height:30dvh;resize:none}
+  .composer-footer{font-size:10px}
+  .disclaimer{font-size:10px;line-height:1.5;padding:0 8px}
+  .messages{padding:22px 0}
+  .message{gap:9px;margin-bottom:22px}
+  .message-content{font-size:14px;line-height:1.75}
+  .auth-card{padding:27px 22px}
+  .auth-card h1{font-family:"Be Vietnam Pro Variable",sans-serif}
+}
+@media(max-width:420px){
+  .model-pill{display:none}
+  .chat-layout{padding:0 11px}
+  .welcome-orb{width:58px;height:58px}
+  .welcome-sub{font-size:12px}
+  .nav-item,.nav-item.active{min-width:48px;padding-inline:5px}
+}
 
 .auth-screen{min-height:100vh;display:grid;place-items:center;padding:22px;background:radial-gradient(ellipse at 50% 38%,rgba(66,47,112,.18),transparent 48%),var(--bg)}
 .auth-card{width:min(100%,390px);padding:34px;border:1px solid #292f3c;border-radius:18px;background:#11151e;text-align:center;box-shadow:0 20px 80px #0005}
