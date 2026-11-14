@@ -9,6 +9,7 @@ Wake AI is a responsive hybrid AI workspace: a chat-first web interface with a c
 - [x] Private password login with signed, HTTP-only sessions
 - [x] Basic per-instance request throttling and safe provider error handling
 - [x] Keeps the CLI available as an optional tool
+- [x] Reproducible llama.cpp GGUF runtime definition (deployment still requires a suitable host and model file)
 - [ ] Persistent web conversations and user accounts
 - [ ] GitHub repository browser and project indexing
 - [ ] Code editor, proposed diffs and approval flow
@@ -82,4 +83,4 @@ npm run build
 
 Never let an agent execute arbitrary repository commands on the web server; future coding tasks must run in an isolated worker and require review before repository writes.
 
-See `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, and `docs/AGENT_RULES.md`.
+See `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, and `docs/AGENT_RULES.md`. The separate GGUF inference runtime is documented in `runtime/README.md`.

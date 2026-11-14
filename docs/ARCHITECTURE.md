@@ -8,6 +8,7 @@
 - **Model gateway** — shared OpenAI-compatible provider in `src/providers/openai-compatible.js`.
 - **Configuration** — shared environment configuration in `src/config.js`.
 - **Model health** — authenticated `GET /api/health/model` checks whether the configured OpenAI-compatible provider is reachable without exposing endpoint URLs or credentials.
+- **Model runtime** — `runtime/` provides a Docker Compose definition for a separate llama.cpp GGUF inference server; it is not hosted by Vercel.
 - **CLI** — retained as an optional interface; it is no longer the main product surface.
 
 ## Request flow
