@@ -1,16 +1,16 @@
-# Koro API contract
+# Sylen API contract
 
-All Koro-to-Wake requests must use HTTPS and send:
+All Sylen-to-Wake requests must use HTTPS and send:
 
-`Authorization: Bearer <KORO_API_SECRET>`
+`Authorization: Bearer <SYLEN_API_SECRET>`
 
-The secret is server-side only. Configure the same high-entropy value as `KORO_API_SECRET` in the Wake Preview environment and in Koro's secret store. Never place it in browser code, public repositories, Discord messages, or client-side environment variables.
+The secret is server-side only. Configure the same high-entropy value as `SYLEN_API_SECRET` in the Wake Preview environment and in Sylen's secret store. Never place it in browser code, public repositories, Discord messages, or client-side environment variables.
 
 ## POST /api/bot/cases
 
 Creates a metadata-only moderation case. Required fields:
 
-- `externalCaseId`: stable Koro-generated idempotency key (1-100 chars)
+- `externalCaseId`: stable Sylen-generated idempotency key (1-100 chars)
 - `guildId`, `channelId`, `messageId`, `authorId`: Discord snowflakes
 - `mediaType`: uppercase identifier such as `IMAGE`
 - `occurredAt`: optional ISO date string
@@ -30,7 +30,7 @@ Accepts `{ "externalCaseId": "...", "eventType": "MESSAGE_DELETED" }` to record 
 
 ## GET /api/bot/decisions
 
-Returns up to 50 undelivered, human-reviewed `CONFIRMED` or `DISMISSED` decisions. Restricted cases are never returned. Koro should acknowledge each delivered decision through the events endpoint.
+Returns up to 50 undelivered, human-reviewed `CONFIRMED` or `DISMISSED` decisions. Restricted cases are never returned. Sylen should acknowledge each delivered decision through the events endpoint.
 
 ## Human reviewer APIs
 
