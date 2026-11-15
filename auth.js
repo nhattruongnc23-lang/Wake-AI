@@ -9,6 +9,7 @@ const allowedEmails = new Set(
     .map(value => value.trim().toLowerCase())
     .filter(Boolean)
 );
+const ownerEmail = (process.env.WAKE_OWNER_EMAIL || "").trim().toLowerCase();
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -28,6 +29,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.role = user.role;
       }
       return session;
+    }
+  },
+  events: {
+    async createUser({ user }) {
+      if (ownerEmail && user.email?.toLowerCase() === ownerEmail) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { role: "OWNER" }
+        });
+      }
     }
   }
 });
