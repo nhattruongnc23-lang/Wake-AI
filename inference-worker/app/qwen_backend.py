@@ -169,8 +169,15 @@ class Qwen3VLBackend(VisionBackend):
             import torch
             started_at = time.monotonic()
             with torch.inference_mode():
-                generated = model.generate(\n                    **inputs,\n                    max_new_tokens=self.max_new_tokens,\n                    max_time=self.generation_timeout_seconds,\n                    do_sample=False,\n                )
-            if time.monotonic() - started_at > self.generation_timeout_seconds:\n                return _uncertain_result("MODEL_TIMEOUT")\n            input_ids = inputs["input_ids"]
+                generated = model.generate(
+                    **inputs,
+                    max_new_tokens=self.max_new_tokens,
+                    max_time=self.generation_timeout_seconds,
+                    do_sample=False,
+                )
+            if time.monotonic() - started_at > self.generation_timeout_seconds:
+                return _uncertain_result("MODEL_TIMEOUT")
+            input_ids = inputs["input_ids"]
             trimmed = [out[len(inp):] for inp, out in zip(input_ids, generated)]
             decoded = processor.batch_decode(
                 trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
