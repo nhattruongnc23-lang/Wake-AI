@@ -93,6 +93,7 @@ class Qwen3VLBackend(VisionBackend):
             local_files_only = os.getenv("WAKE_QWEN_LOCAL_FILES_ONLY", "true").lower() not in {"0", "false", "no"}
         self.local_files_only = local_files_only
         self.max_new_tokens = max(16, min(int(max_new_tokens), 128))
+        self.generation_timeout_seconds = max(1.0, float(os.getenv("WAKE_QWEN_GENERATION_TIMEOUT_SECONDS", "30")))
         self._loader = loader
         self._model = None
         self._processor = None
@@ -165,7 +166,7 @@ class Qwen3VLBackend(VisionBackend):
                 inputs.pop("token_type_ids", None)
             import torch
             with torch.inference_mode():
-                generated = model.generate(**inputs, max_new_tokens=self.max_new_tokens, do_sample=False)
+                generated = model.generate(\n                    **inputs,\n                    max_new_tokens=self.max_new_tokens,\n                    max_time=self.generation_timeout_seconds,\n                    do_sample=False,\n                )
             input_ids = inputs["input_ids"]
             trimmed = [out[len(inp):] for inp, out in zip(input_ids, generated)]
             decoded = processor.batch_decode(
