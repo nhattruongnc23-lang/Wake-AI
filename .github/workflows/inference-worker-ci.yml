@@ -27,5 +27,5 @@ jobs:
         env:
           PYTHONPATH: inference-worker
         run: python -m unittest discover -s inference-worker/tests -p "test_*.py" -v
-      - name: Check runner syntax
-        run: python -m py_compile inference-worker/benchmark/runner.py
+      - name: Check Python syntax
+        run: python -m compileall -q inference-worker/app inference-worker/benchmark inference-worker/tests
