@@ -64,17 +64,31 @@ export async function POST(request) {
     classifierVersion: typeof payload.classifierVersion === "string" ? payload.classifierVersion.slice(0, 80) : null
   };
 
-  const record = externalCaseId
-    ? await prisma.moderationCase.upsert({
-        where: { externalCaseId },
-        create: { ...data, externalCaseId },
-        update: data,
-        select: { id: true, status: true, restricted: true }
-      })
-    : await prisma.moderationCase.create({
-        data,
-        select: { id: true, status: true, restricted: true }
-      });
+  let record;
+  if (externalCaseId) {
+    const existing = await prisma.moderationCase.findUnique({ where: { externalCaseId } });
+    record = existing
+      ? await prisma.moderationCase.update({
+          where: { externalCaseId },
+          data: {
+            ...data,
+            status: existing.status,
+            reviewerId: existing.reviewerId,
+            reviewedAt: existing.reviewedAt,
+            reviewNote: existing.reviewNote
+          },
+          select: { id: true, status: true, restricted: true }
+        })
+      : await prisma.moderationCase.create({
+          data: { ...data, externalCaseId },
+          select: { id: true, status: true, restricted: true }
+        });
+  } else {
+    record = await prisma.moderationCase.create({
+      data,
+      select: { id: true, status: true, restricted: true }
+    });
+  }
 
   await prisma.auditLog.create({
     data: {
