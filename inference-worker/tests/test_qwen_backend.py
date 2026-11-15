@@ -1,12 +1,13 @@
 import io
 import json
 import unittest
-from unittest.mock import Mock
-
 from PIL import Image
+import sys
+from pathlib import Path
 
-from inference_worker.app.qwen_backend import Qwen3VLBackend, _parse_output
-from inference_worker.app.contracts import SafetyGate, VisualStyle
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from app.qwen_backend import Qwen3VLBackend, _parse_output
+from app.contracts import SafetyGate, VisualStyle
 
 
 def png_bytes():
