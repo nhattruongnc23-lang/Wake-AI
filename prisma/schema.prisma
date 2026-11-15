@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum UserRole {
@@ -95,32 +96,32 @@ model GuildConfig {
 }
 
 model ModerationCase {
-  id                String             @id @default(cuid())
-  externalCaseId    String?            @unique
-  guildId           String
-  channelId         String
-  messageId         String
-  authorId          String
-  authorTag         String?
-  occurredAt        DateTime
-  mediaType         String
-  attachmentCount   Int                @default(1)
-  category          ViolationCategory  @default(UNKNOWN)
-  severity          Severity           @default(UNKNOWN)
-  confidence        Float?
-  status            CaseStatus         @default(PENDING)
-  restricted        Boolean            @default(false)
-  classifier        String?
-  classifierVersion String?
-  safeSummary       String?            @db.VarChar(500)
-  messageDeleted    Boolean            @default(false)
+  id                  String             @id @default(cuid())
+  externalCaseId      String?            @unique
+  guildId             String
+  channelId           String
+  messageId           String
+  authorId            String
+  authorTag           String?
+  occurredAt          DateTime
+  mediaType           String
+  attachmentCount     Int                @default(1)
+  category            ViolationCategory  @default(UNKNOWN)
+  severity            Severity           @default(UNKNOWN)
+  confidence          Float?
+  status              CaseStatus         @default(PENDING)
+  restricted          Boolean            @default(false)
+  classifier          String?
+  classifierVersion   String?
+  safeSummary         String?            @db.VarChar(500)
+  messageDeleted      Boolean            @default(false)
   decisionDeliveredAt DateTime?
-  reviewedAt        DateTime?
-  reviewerId        String?
-  reviewer          User?              @relation("CaseReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
-  reviewNote        String?            @db.VarChar(1000)
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  reviewedAt          DateTime?
+  reviewerId          String?
+  reviewer            User?              @relation("CaseReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  reviewNote          String?            @db.VarChar(1000)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
 
   @@index([guildId, status, createdAt])
   @@index([authorId, createdAt])
