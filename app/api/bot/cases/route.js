@@ -77,7 +77,8 @@ export async function POST(request) {
           where: { externalCaseId },
           data: {
             ...data,
-            status: restricted
+            restricted: restricted || existing.restricted,
+            status: (restricted || existing.restricted)
               ? "RESTRICTED"
               : ["CONFIRMED", "DISMISSED"].includes(existing.status)
                 ? existing.status
