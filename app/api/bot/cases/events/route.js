@@ -26,6 +26,10 @@ export async function POST(request) {
     select: { id: true, messageDeleted: true, decisionDeliveredAt: true, status: true }
   });
   if (!item) return Response.json({ error: "Case not found" }, { status: 404 });
+  if (body.eventType === "DECISION_DELIVERED" &&
+      (!["CONFIRMED", "DISMISSED"].includes(item.status) || item.decisionDeliveredAt)) {
+    return Response.json({ error: "No pending reviewed decision to acknowledge" }, { status: 409 });
+  }
 
   try {
     const updated = await prisma.$transaction(async tx => {

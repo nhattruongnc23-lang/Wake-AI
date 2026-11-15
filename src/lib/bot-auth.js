@@ -45,10 +45,13 @@ export async function readJsonBody(request, maxBytes = MAX_BODY_BYTES) {
 const forbiddenKey = /(?:image|mediaurl|attachmenturl|cdnurl|fileurl|base64|binary|buffer|rawmedia|previewurl|signedurl)/i;
 
 export function containsForbiddenMedia(value) {
+  if (typeof value === "string") return /^https?:\\/\\//i.test(value.trim());
   if (!value || typeof value !== "object") return false;
   for (const [key, child] of Object.entries(value)) {
-    if (forbiddenKey.test(key)) return true;
+    const normalizedKey = key.replace(/[^a-z0-9]/gi, "");
+    if (forbiddenKey.test(normalizedKey)) return true;
     if (child && typeof child === "object" && containsForbiddenMedia(child)) return true;
+    if (typeof child === "string" && containsForbiddenMedia(child)) return true;
   }
   return false;
 }
