@@ -30,11 +30,11 @@ export default async function DashboardPage() {
       <section className="wm-main">
         <header className="wm-topbar">
           <div><span className="wm-muted">Workspace / </span><strong>Tổng quan</strong></div>
-          <div className="wm-connected"><i /> Koro integration · Chưa kết nối</div>
+          <div className="wm-connected"><i /> Sylen integration · Chưa kết nối</div>
         </header>
         <div className="wm-content">
           <div className="wm-heading">
-            <div><p className="wm-eyebrow">MODERATION CENTER</p><h1>Tổng quan</h1><p className="wm-muted">Theo dõi và xử lý các trường hợp được Koro chuyển đến.</p></div>
+            <div><p className="wm-eyebrow">MODERATION CENTER</p><h1>Tổng quan</h1><p className="wm-muted">Theo dõi và xử lý các trường hợp được Sylen chuyển đến.</p></div>
             <span className="wm-role">{role}</span>
           </div>
           <div className="wm-stats">
@@ -45,7 +45,7 @@ export default async function DashboardPage() {
           </div>
           <section className="wm-panel">
             <div className="wm-panel-title"><div><h2>Hàng đợi kiểm duyệt</h2><p className="wm-muted">Các trường hợp mới sẽ xuất hiện tại đây.</p></div><a href="/cases">Xem hàng đợi →</a></div>
-            <div className="wm-empty"><div className="wm-empty-icon">✓</div><strong>Không có dữ liệu để hiển thị</strong><p>Khi Koro được kết nối, các trường hợp cần xem xét sẽ xuất hiện tại đây.</p></div>
+            <div className="wm-empty"><div className="wm-empty-icon">✓</div><strong>Không có dữ liệu để hiển thị</strong><p>Khi Sylen được kết nối, các trường hợp cần xem xét sẽ xuất hiện tại đây.</p></div>
           </section>
           <p className="wm-security-note">Bản dựng khung giao diện · Nội dung nhạy cảm không được lưu trữ hoặc hiển thị tại trang tổng quan.</p>
         </div>
