@@ -1,8 +1,8 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Wake AI",
-  description: "A personal AI workspace for conversation and coding."
+  title: "Wake Moderation",
+  description: "Private moderation workspace for Koro."
 };
 
 export default function RootLayout({ children }) {
