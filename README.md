@@ -1,6 +1,6 @@
 # Wake Moderation
 
-Private moderation dashboard and API service for the Koro Discord bot.
+Private moderation dashboard and API service for the Sylen Discord bot.
 
 This branch is the new Wake Moderation workspace. The original Wake-AI branch remains unchanged.
 
@@ -8,7 +8,7 @@ This branch is the new Wake Moderation workspace. The original Wake-AI branch re
 - Next.js App Router + React
 - Google OAuth via Auth.js
 - PostgreSQL + Prisma
-- Separate authenticated Koro ingestion API
+- Separate authenticated Sylen ingestion API
 - Human review queue with audit events
 
 ## Current structure
@@ -18,7 +18,7 @@ This branch is the new Wake Moderation workspace. The original Wake-AI branch re
 - `app/guilds`: server configuration area
 - `app/users`: owner-only account overview
 - `app/api/auth/[...nextauth]`: Auth.js handlers
-- `app/api/bot/cases`: Koro-to-Wake ingestion endpoint
+- `app/api/bot/cases`: Sylen-to-Wake ingestion endpoint
 - `app/api/cases`: authenticated case listing and review endpoint
 - `prisma/schema.prisma`: users, roles, sessions, guild config, cases and audit log
 - `docs/MODERATION_ARCHITECTURE.md`: security boundaries and service architecture
@@ -32,7 +32,7 @@ This branch is the new Wake Moderation workspace. The original Wake-AI branch re
 5. Add the owner email to both `WAKE_ALLOWED_EMAILS` and `WAKE_OWNER_EMAIL`.
 6. Configure the Neon pooled connection in `DATABASE_URL` and the direct connection in `DIRECT_URL`. Keep both server-side only.
 7. Run `npm install`, `npm run db:push`, then `npm run dev`.
-8. Set a unique random `KORO_API_SECRET` of at least 32 characters. Configure the same value only in Koro's server environment.
+8. Set a unique random `SYLEN_API_SECRET` of at least 32 characters. Configure the same value only in Sylen's server environment.
 
 For Neon, use the pooled connection string (with the pooler host) for `DATABASE_URL`. Use the non-pooled connection string for `DIRECT_URL`, which Prisma uses for direct database operations such as schema changes. Never commit real credentials.
 
@@ -41,11 +41,11 @@ The first allowed Google account matching WAKE_OWNER_EMAIL is assigned OWNER whe
 ## Security notes
 - Never commit .env or credentials.
 - Google identity is not an authorization role; Wake Moderation checks its allowlist and database role.
-- Koro uses a separate server credential, not a Google session.
+- Sylen uses a separate server credential, not a Google session.
 - Case records contain metadata only. Do not add raw media, attachment URLs or public preview URLs.
 - Restricted cases are excluded from the standard review action.
 - Classifier results are advisory; reviewers make decisions.
 - Configure HTTPS and production secrets before deployment.
 
 ## Status
-Scaffold stage. The dashboard shell, Google OAuth wiring, Prisma schema, Koro ingestion endpoint and basic review API are in place. Production database setup, OAuth credentials, Koro event integration, classifier service, guild-scoped permissions, and end-to-end tests are still pending.
+Scaffold stage. The dashboard shell, Google OAuth wiring, Prisma schema, Sylen ingestion endpoint and basic review API are in place. Production database setup, OAuth credentials, Sylen event integration, classifier service, guild-scoped permissions, and end-to-end tests are still pending.
