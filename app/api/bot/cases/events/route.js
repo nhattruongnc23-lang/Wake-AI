@@ -1,77 +1,53 @@
-import { timingSafeEqual } from "node:crypto";
 import { prisma } from "../../../../../src/lib/prisma.js";
+import { requireBotAuth, readJsonBody } from "../../../../../src/lib/bot-auth.js";
+import { writeAudit } from "../../../../../src/lib/audit.js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function authorized(request) {
-  const expected = process.env.KORO_API_SECRET || "";
-  const supplied = (request.headers.get("authorization") || "").replace(/^Bearer\\s+/i, "");
-  return expected.length >= 32 && supplied.length === expected.length &&
-    timingSafeEqual(Buffer.from(supplied), Buffer.from(expected));
-}
-
 export async function POST(request) {
-  if (!authorized(request)) return Response.json({ error: "Unauthorized" }, { status: 401 });
-  let payload;
-  try {
-    const raw = await request.text();
-    if (Buffer.byteLength(raw) > 4096) return Response.json({ error: "Payload too large" }, { status: 413 });
-    payload = JSON.parse(raw);
-  } catch {
-    return Response.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+  const denied = requireBotAuth(request);
+  if (denied) return denied;
 
-  if (!["MESSAGE_DELETED", "DECISION_DELIVERED"].includes(payload?.event) ||
-      typeof payload.caseId !== "string" ||
-      !/^\\d{6,25}:\\d{6,25}$/.test(payload.caseId)) {
+  const parsed = await readJsonBody(request, 16 * 1024);
+  if (parsed.error) return parsed.error;
+  const body = parsed.data;
+
+  if (!body || typeof body !== "object" || Array.isArray(body) ||
+      typeof body.externalCaseId !== "string" || body.externalCaseId.length > 100) {
     return Response.json({ error: "Invalid event payload" }, { status: 400 });
   }
+  if (!["MESSAGE_DELETED", "DECISION_DELIVERED"].includes(body.eventType)) {
+    return Response.json({ error: "Unsupported eventType" }, { status: 400 });
+  }
 
-  const existing = await prisma.moderationCase.findUnique({
-    where: { externalCaseId: payload.caseId },
-    select: { id: true, messageDeleted: true }
+  const item = await prisma.moderationCase.findUnique({
+    where: { externalCaseId: body.externalCaseId },
+    select: { id: true, messageDeleted: true, decisionDeliveredAt: true, status: true }
   });
-  if (!existing) return Response.json({ accepted: true, recorded: false }, { status: 202 });
+  if (!item) return Response.json({ error: "Case not found" }, { status: 404 });
 
-  if (payload.event === "DECISION_DELIVERED") {
-    const result = await prisma.moderationCase.updateMany({
-      where: {
-        id: existing.id,
-        status: { in: ["CONFIRMED", "DISMISSED"] },
-        restricted: false,
-        decisionDeliveredAt: null
-      },
-      data: { decisionDeliveredAt: new Date() }
-    });
-    if (result.count) {
-      await prisma.auditLog.create({
-        data: {
-          action: "case.decision_delivered",
-          targetType: "moderation_case",
-          targetId: existing.id,
-          metadata: { source: "koro" }
-        }
+  try {
+    const updated = await prisma.$transaction(async tx => {
+      const result = await tx.moderationCase.update({
+        where: { id: item.id },
+        data: body.eventType === "MESSAGE_DELETED"
+          ? { messageDeleted: true }
+          : (["CONFIRMED", "DISMISSED"].includes(item.status) && !item.decisionDeliveredAt
+              ? { decisionDeliveredAt: new Date() }
+              : {}),
+        select: { id: true, messageDeleted: true, decisionDeliveredAt: true, status: true }
       });
-    }
-    return Response.json({ accepted: true, recorded: result.count > 0 }, { headers: { "cache-control": "no-store" } });
+      await writeAudit(tx, {
+        action: body.eventType,
+        targetType: "ModerationCase",
+        targetId: item.id
+      });
+      return result;
+    });
+    return Response.json({ case: updated }, { headers: { "cache-control": "no-store" } });
+  } catch (error) {
+    console.error("Koro case event failed", error);
+    return Response.json({ error: "Unable to process event" }, { status: 500 });
   }
-
-  if (!existing.messageDeleted) {
-    await prisma.$transaction([
-      prisma.moderationCase.update({
-        where: { id: existing.id },
-        data: { messageDeleted: true }
-      }),
-      prisma.auditLog.create({
-        data: {
-          action: "case.source_message_deleted",
-          targetType: "moderation_case",
-          targetId: existing.id,
-          metadata: { source: "koro" }
-        }
-      })
-    ]);
-  }
-  return Response.json({ accepted: true, recorded: true }, { headers: { "cache-control": "no-store" } });
 }
