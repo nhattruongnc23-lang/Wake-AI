@@ -46,7 +46,7 @@ export async function POST(request) {
     return Response.json({ error: "Invalid confidence value" }, { status: 400 });
   }
 
-  const restricted = payload.restricted === true;
+  const restricted = payload.restricted === true || category === "SEXUAL_CONTENT";
   const data = {
     guildId: payload.guildId,
     channelId: payload.channelId,
