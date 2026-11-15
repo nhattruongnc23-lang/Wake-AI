@@ -9,7 +9,7 @@ export default async function CasesPage() {
   const cases = await prisma.moderationCase.findMany({
     take: 30,
     orderBy: { createdAt: "desc" },
-    select: { id: true, guildId: true, authorTag: true, mediaType: true, category: true, severity: true, status: true, restricted: true, createdAt: true }
+    select: { id: true, guildId: true, authorTag: true, mediaType: true, attachmentCount: true, category: true, severity: true, status: true, restricted: true, createdAt: true }
   });
 
   return (
@@ -26,9 +26,9 @@ export default async function CasesPage() {
               <tbody>{cases.map(item => <tr key={item.id}>
                 <td style={{ padding:"13px 8px",borderBottom:"1px solid #202a37" }}>{item.id.slice(-8)}</td>
                 <td style={{ padding:"13px 8px",borderBottom:"1px solid #202a37" }}>{item.authorTag || item.id}</td>
-                <td style={{ padding:"13px 8px",borderBottom:"1px solid #202a37" }}>{item.mediaType}</td>
+                <td style={{ padding:"13px 8px",borderBottom:"1px solid #202a37" }}>{item.mediaType} · {item.attachmentCount}</td>
                 <td style={{ padding:"13px 8px",borderBottom:"1px solid #202a37" }}>{item.restricted ? "Restricted" : item.category}</td>
-                <td style={{ padding:"13px 8px",borderBottom:"1px solid #202a37" }}>{item.restricted ? "—" : item.severity}</td>
+                <td style={{ padding:"13px 8px",borderBottom:"1px solid #202a37" }}>{item.restricted || item.category === "UNKNOWN" ? "—" : item.severity}</td>
                 <td style={{ padding:"13px 8px",borderBottom:"1px solid #202a37" }}>{item.status}</td>
                 <td style={{ padding:"13px 8px",borderBottom:"1px solid #202a37",whiteSpace:"nowrap" }}>{item.createdAt.toLocaleString("vi-VN")}</td>
               </tr>)}</tbody>
