@@ -77,10 +77,14 @@ export async function POST(request) {
           where: { externalCaseId },
           data: {
             ...data,
-            status: existing.status,
-            reviewerId: existing.reviewerId,
-            reviewedAt: existing.reviewedAt,
-            reviewNote: existing.reviewNote
+            status: restricted
+              ? "RESTRICTED"
+              : ["CONFIRMED", "DISMISSED"].includes(existing.status)
+                ? existing.status
+                : data.status,
+            reviewerId: ["CONFIRMED", "DISMISSED"].includes(existing.status) ? existing.reviewerId : null,
+            reviewedAt: ["CONFIRMED", "DISMISSED"].includes(existing.status) ? existing.reviewedAt : null,
+            reviewNote: ["CONFIRMED", "DISMISSED"].includes(existing.status) ? existing.reviewNote : null
           },
           select: { id: true, status: true, restricted: true }
         })
