@@ -11,7 +11,7 @@ export async function GET(request) {
   const url = new URL(request.url);
   const status = url.searchParams.get("status");
   const take = Math.min(Math.max(Number(url.searchParams.get("limit") || 25), 1), 50);
-  const where = status && ["PENDING", "CONFIRMED", "DISMISSED", "RESTRICTED"].includes(status)
+  const where = status && ["UNCLASSIFIED", "PENDING", "CONFIRMED", "DISMISSED", "RESTRICTED"].includes(status)
     ? { status }
     : {};
 
@@ -21,7 +21,7 @@ export async function GET(request) {
     orderBy: { createdAt: "desc" },
     select: {
       id: true, guildId: true, channelId: true, messageId: true,
-      authorId: true, authorTag: true, occurredAt: true, mediaType: true,
+      authorId: true, authorTag: true, occurredAt: true, mediaType: true, attachmentCount: true,
       category: true, severity: true, confidence: true, status: true,
       restricted: true, messageDeleted: true, createdAt: true
     }
