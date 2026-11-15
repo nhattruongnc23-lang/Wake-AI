@@ -118,6 +118,7 @@ class Qwen3VLBackend(VisionBackend):
                 ) from exc
             kwargs = {
                 "device_map": self.device_map,
+                "dtype": "auto",
                 "local_files_only": self.local_files_only,
             }
             if self.revision:
