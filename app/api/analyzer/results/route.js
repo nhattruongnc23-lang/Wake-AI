@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 function validSecret(request) {
   const expected = process.env.WAKE_ANALYZER_SECRET || "";
-  const supplied = (request.headers.get("authorization") || "").replace(/^Bearer\\s+/i, "");
+  const supplied = (request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
   if (expected.length < 32 || supplied.length !== expected.length) return false;
   return timingSafeEqual(Buffer.from(supplied), Buffer.from(expected));
 }
