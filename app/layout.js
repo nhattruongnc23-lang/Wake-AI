@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./moderation.css";
 
 export const metadata = {
   title: "Wake Moderation",
