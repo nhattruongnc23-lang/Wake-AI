@@ -33,7 +33,8 @@ A case contains Discord IDs, timestamps, media type, classifier category/severit
 
 ## Planned API boundaries
 - POST /api/bot/cases: Koro-only metadata ingestion endpoint, authenticated with a dedicated bot secret.
-- POST /api/bot/cases/events: Koro-only source-message lifecycle events (currently deletion markers).
+- POST /api/bot/cases/events: Koro-only source-message lifecycle events and reviewed-decision delivery acknowledgements.
+- GET /api/bot/decisions: Koro-only polling endpoint for human-reviewed decisions not yet delivered to Discord.
 - GET /api/cases: authenticated dashboard case listing.
 - GET /api/cases/:id: authorized case metadata.
 - POST /api/cases/:id/review: owner/admin review action with audit logging.
