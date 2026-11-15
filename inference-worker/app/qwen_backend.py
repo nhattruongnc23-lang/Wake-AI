@@ -7,6 +7,7 @@ import io
 import json
 import os
 import re
+import time
 from typing import Any
 
 from .backend import VisionBackend
@@ -166,9 +167,10 @@ class Qwen3VLBackend(VisionBackend):
             if isinstance(inputs, dict):
                 inputs.pop("token_type_ids", None)
             import torch
+            started_at = time.monotonic()
             with torch.inference_mode():
                 generated = model.generate(\n                    **inputs,\n                    max_new_tokens=self.max_new_tokens,\n                    max_time=self.generation_timeout_seconds,\n                    do_sample=False,\n                )
-            input_ids = inputs["input_ids"]
+            if time.monotonic() - started_at > self.generation_timeout_seconds:\n                return _uncertain_result("MODEL_TIMEOUT")\n            input_ids = inputs["input_ids"]
             trimmed = [out[len(inp):] for inp, out in zip(input_ids, generated)]
             decoded = processor.batch_decode(
                 trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
