@@ -47,6 +47,10 @@ export async function POST(request) {
   }
 
   const restricted = payload.restricted === true || category === "SEXUAL_CONTENT";
+  const attachmentCount = Number(payload.attachmentCount ?? 1);
+  if (!Number.isInteger(attachmentCount) || attachmentCount < 1 || attachmentCount > 10) {
+    return Response.json({ error: "Invalid attachment count" }, { status: 400 });
+  }
   const data = {
     guildId: payload.guildId,
     channelId: payload.channelId,
@@ -55,11 +59,12 @@ export async function POST(request) {
     authorTag: typeof payload.authorTag === "string" ? payload.authorTag.slice(0, 100) : null,
     occurredAt,
     mediaType,
+    attachmentCount,
     category,
     severity,
     confidence,
     restricted,
-    status: restricted ? "RESTRICTED" : "PENDING",
+    status: restricted ? "RESTRICTED" : category === "UNKNOWN" ? "UNCLASSIFIED" : "PENDING",
     classifier: typeof payload.classifier === "string" ? payload.classifier.slice(0, 80) : null,
     classifierVersion: typeof payload.classifierVersion === "string" ? payload.classifierVersion.slice(0, 80) : null
   };
