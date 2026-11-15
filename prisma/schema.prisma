@@ -114,6 +114,7 @@ model ModerationCase {
   classifierVersion String?
   safeSummary       String?            @db.VarChar(500)
   messageDeleted    Boolean            @default(false)
+  decisionDeliveredAt DateTime?
   reviewedAt        DateTime?
   reviewerId        String?
   reviewer          User?              @relation("CaseReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
