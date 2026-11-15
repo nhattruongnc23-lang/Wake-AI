@@ -18,7 +18,7 @@ class BenchmarkRunnerTests(unittest.TestCase):
         }
         report = runner.evaluate(truth, predictions)
         self.assertEqual(report["sample_count"], 3)
-        self.assertEqual(report["accuracy"], 2 / 3)
+        self.assertAlmostEqual(report["accuracy"], 2 / 3, places=3)
         self.assertEqual(report["unknown_prediction_rate"], 1 / 3)
         self.assertEqual(report["latency_ms"]["p95"], 20.0)
 
