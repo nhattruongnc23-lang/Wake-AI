@@ -1,23 +1,26 @@
 {
-  "name": "wake-ai",
-  "version": "0.2.0",
+  "name": "wake-moderation",
+  "version": "0.1.0",
   "private": true,
-  "description": "Personal AI workspace and coding agent for Wake",
+  "description": "Private moderation dashboard and API for the Koro Discord bot",
   "type": "module",
-  "engines": {
-    "node": ">=22.12.0"
-  },
+  "engines": { "node": ">=22.12.0" },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
-    "cli": "node src/cli/index.js",
     "test": "node --test",
-    "check": "node --check app/api/chat/route.js && node --check src/cli/index.js && node --check src/providers/openai-compatible.js && node --check src/config.js"
+    "check": "node --check auth.js && node --check src/lib/prisma.js && node --check app/api/auth/[...nextauth]/route.js"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.10.0",
+    "@prisma/client": "^6.19.0",
     "next": "^15.5.6",
+    "next-auth": "^5.0.0-beta.30",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "prisma": "^6.19.0"
   }
 }
