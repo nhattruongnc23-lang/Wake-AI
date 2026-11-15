@@ -114,7 +114,7 @@ export async function POST(request) {
       });
       if (existing) return Response.json({ case: existing, duplicate: true });
     }
-    console.error("Koro case ingestion failed", error);
+    console.error("Sylen case ingestion failed", error);
     return Response.json({ error: "Unable to ingest case" }, { status: 500 });
   }
 }
