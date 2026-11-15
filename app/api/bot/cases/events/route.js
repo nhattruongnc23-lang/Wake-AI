@@ -34,6 +34,29 @@ export async function POST(request) {
   });
   if (!existing) return Response.json({ accepted: true, recorded: false }, { status: 202 });
 
+  if (payload.event === "DECISION_DELIVERED") {
+    const result = await prisma.moderationCase.updateMany({
+      where: {
+        id: existing.id,
+        status: { in: ["CONFIRMED", "DISMISSED"] },
+        restricted: false,
+        decisionDeliveredAt: null
+      },
+      data: { decisionDeliveredAt: new Date() }
+    });
+    if (result.count) {
+      await prisma.auditLog.create({
+        data: {
+          action: "case.decision_delivered",
+          targetType: "moderation_case",
+          targetId: existing.id,
+          metadata: { source: "koro" }
+        }
+      });
+    }
+    return Response.json({ accepted: true, recorded: result.count > 0 }, { headers: { "cache-control": "no-store" } });
+  }
+
   if (!existing.messageDeleted) {
     await prisma.$transaction([
       prisma.moderationCase.update({
