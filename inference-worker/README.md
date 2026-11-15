@@ -18,16 +18,16 @@ The official model card marks the exact checkpoint Apache-2.0. Confirm the licen
 
 This adapter classifies visual style only. It always returns `safetyGate=UNCERTAIN`, `category=UNKNOWN`, and `severity=UNKNOWN`, including when style classification succeeds. Therefore it cannot clear a moderation case. Invalid image input, malformed output, timeout, missing runtime, or inference errors return an UNKNOWN/RESTRICTED result.
 
-Image bytes are processed in memory only. The adapter does not persist or log images, fetch image URLs, expose previews, or start an HTTP endpoint. Use safe, non-explicit test fixtures only.
+Image bytes are processed in memory only. The adapter enforces an 8 MiB compressed-size limit, checks the actual image format against its MIME type, and rejects images above 16 megapixels. It does not persist or log images, fetch image URLs, expose previews, or start an HTTP endpoint. Use safe-only test fixtures.
 
 ## Tests
 
 From repository root:
 
 ```bash
-python -m pip install Pillow
+python -m pip install -r inference-worker/requirements.txt Pillow
 python -m unittest discover -s inference-worker/tests -p "test_*.py" -v
-python -m py_compile inference-worker/app/qwen_backend.py
+python -m compileall -q inference-worker/app inference-worker/benchmark inference-worker/tests
 ```
 
 Real model weights are not downloaded by tests.
