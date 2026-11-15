@@ -37,7 +37,7 @@ OWNER and ADMIN access is still subject to the media safety gate. No role, inclu
 
 ## Current implementation boundary
 
-The current Koro bridge sends metadata only. The current Wake dashboard does not display media. This document is a policy specification, not evidence-viewing functionality. Do not add media transport, storage, preview routes, or reveal controls until the safety gate, authorization checks, audit logging, expiry, and tests are implemented together.
+The current Sylen bridge sends metadata only. The current Wake dashboard does not display media. This document is a policy specification, not evidence-viewing functionality. Do not add media transport, storage, preview routes, or reveal controls until the safety gate, authorization checks, audit logging, expiry, and tests are implemented together.
 
 ## Required tests before enabling evidence review
 
