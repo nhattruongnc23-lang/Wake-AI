@@ -32,3 +32,8 @@ Reports include accuracy, macro-F1, per-class precision/recall/F1, confusion mat
 - UNKNOWN is an abstention, not a successful classification. Review macro-F1 together with UNKNOWN rate.
 - These metrics cover visual-style classification only. They do not certify sexual-content, age, violence, or gore detection.
 - A model's confidence is not a safety decision. Invalid, missing, timed-out, or uncertain outputs must fail closed in Wake.
+
+
+## Offline runtime preflight
+
+Run from repository root: `python inference-worker/benchmark/runtime_preflight.py`. This diagnostic checks optional runtime package presence, system RAM, free disk, CUDA devices/VRAM, and whether checkpoint weight files are already cached. It does not access the network, download weights, initialize a model, or read image data. Planning targets are advisory: 32 GiB RAM, 24 GiB single-GPU VRAM, and 25 GiB free disk. CPU offload and multi-GPU placement require separate measurements. A not-ready result means do not attempt model loading yet.
