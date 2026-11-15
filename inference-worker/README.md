@@ -1,6 +1,6 @@
 # Wake Inference Worker
 
-The worker currently contains a model adapter foundation and benchmark tooling. It is not a deployed classifier and has no public image-ingestion endpoint.
+The worker contains a model adapter foundation, benchmark tooling, and an offline runtime preflight. It is not a deployed classifier and has no public image-ingestion endpoint.
 
 ## Qwen3-VL adapter
 
@@ -20,13 +20,18 @@ This adapter classifies visual style only. It always returns `safetyGate=UNCERTA
 
 Image bytes are processed in memory only. The adapter enforces an 8 MiB compressed-size limit, checks the actual image format against its MIME type, and rejects images above 16 megapixels. It does not persist or log images, fetch image URLs, expose previews, or start an HTTP endpoint. Use safe-only test fixtures.
 
+## Offline hardware preflight
+
+Run `python inference-worker/benchmark/runtime_preflight.py` before provisioning model weights. It checks optional package presence, system RAM, free disk, CUDA/VRAM, and whether model weights are already cached. It makes no network requests and never downloads weights. Planning targets are advisory: 32 GiB RAM, 24 GiB single-GPU VRAM, and 25 GiB free disk; actual performance must be measured on the intended host.
+
 ## Tests
 
 From repository root:
 
 ```bash
 python -m pip install -r inference-worker/requirements.txt Pillow
-python -m unittest discover -s inference-worker/tests -p "test_*.py" -v
+python -m unittest discover -s inference-worker/benchmark -p "test_*.py" -v
+PYTHONPATH=inference-worker python -m unittest discover -s inference-worker/tests -p "test_*.py" -v
 python -m compileall -q inference-worker/app inference-worker/benchmark inference-worker/tests
 ```
 
