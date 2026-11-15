@@ -129,5 +129,37 @@ class QwenBackendTests(unittest.TestCase):
         self.assertTrue(backend.local_files_only)
 
 
+    def test_malformed_model_text_through_backend_is_restricted(self):
+        backend = self.backend("not-json")
+        import sys
+        original = sys.modules.get("torch")
+        sys.modules["torch"] = type("TorchModule", (), {"inference_mode": FakeTorch.inference_mode})
+        try:
+            result = backend.analyze(png_bytes(), "image/png")
+        finally:
+            if original is None:
+                sys.modules.pop("torch", None)
+            else:
+                sys.modules["torch"] = original
+        self.assertEqual(result.style, VisualStyle.UNKNOWN)
+        self.assertEqual(result.safetyGate, SafetyGate.RESTRICTED)
+
+    def test_model_load_error_is_restricted(self):
+        def failed_loader(*args):
+            raise RuntimeError("weights unavailable")
+        backend = Qwen3VLBackend(loader=failed_loader)
+        result = backend.analyze(png_bytes(), "image/png")
+        self.assertEqual(result.style, VisualStyle.UNKNOWN)
+        self.assertEqual(result.safetyGate, SafetyGate.RESTRICTED)
+        self.assertIn("MODEL_INFERENCE_ERROR", result.signals)
+
+    def test_invalid_mime_is_restricted_before_model_load(self):
+        calls = []
+        backend = Qwen3VLBackend(loader=lambda *args: calls.append(args))
+        result = backend.analyze(png_bytes(), "image/jpeg")
+        self.assertEqual(result.safetyGate, SafetyGate.RESTRICTED)
+        self.assertIn("IMAGE_MIME_MISMATCH", result.signals)
+        self.assertEqual(calls, [])
+
 if __name__ == "__main__":
     unittest.main()
