@@ -10,7 +10,9 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "test": "node --test",
-    "check": "node --check auth.js && node --check src/lib/prisma.js && node --check app/api/auth/[...nextauth]/route.js"
+    "check": "node --check auth.js && node --check src/lib/prisma.js && node --check app/api/auth/[...nextauth]/route.js",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
