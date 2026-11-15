@@ -51,7 +51,7 @@ export async function POST(request) {
     });
     return Response.json({ case: updated }, { headers: { "cache-control": "no-store" } });
   } catch (error) {
-    console.error("Koro case event failed", error);
+    console.error("Sylen case event failed", error);
     return Response.json({ error: "Unable to process event" }, { status: 500 });
   }
 }
