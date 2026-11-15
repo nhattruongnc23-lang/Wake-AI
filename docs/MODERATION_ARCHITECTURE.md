@@ -8,6 +8,7 @@ Wake Moderation is the moderation dashboard and API service that works with the 
 - API: authenticated endpoints for Koro ingestion and reviewer actions.
 - Database: PostgreSQL via Prisma. Stores case metadata, guild configuration, reviewer decisions and audit events.
 - Analyzer: a separate media-classification service. It returns labels and confidence; it does not decide punishments.
+- Visual Intelligence v0.1: metadata-only analyzer result endpoint at `POST /api/analyzer/results`, authenticated with `WAKE_ANALYZER_SECRET`. It separates visual style from safety category and fails closed on uncertain results. No image bytes or media URLs are accepted.
 
 ## Trust boundaries
 1. Google OAuth is for human dashboard accounts only.
