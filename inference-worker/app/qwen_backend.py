@@ -15,6 +15,8 @@ from .contracts import Category, SafetyGate, Severity, VisualResult, VisualStyle
 
 _ALLOWED_MIME = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 _MAX_IMAGE_BYTES = 8 * 1024 * 1024
+_MAX_IMAGE_PIXELS = 16_000_000
+_MIME_FORMATS = {"image/jpeg": {"JPEG"}, "image/png": {"PNG"}, "image/webp": {"WEBP"}, "image/gif": {"GIF"}}
 _STYLE_LABELS = {item.value for item in VisualStyle}
 _PROMPT = """Classify only the broad visual presentation style of this image.
 Choose exactly one label from: REAL_PHOTO, ANIME_MANGA,
@@ -143,6 +145,11 @@ class Qwen3VLBackend(VisionBackend):
 
             from PIL import Image
             with Image.open(io.BytesIO(image_bytes)) as source:
+                if source.format not in _MIME_FORMATS[mime_type]:
+                    return _uncertain_result("IMAGE_MIME_MISMATCH")
+                width, height = source.size
+                if width < 1 or height < 1 or width * height > _MAX_IMAGE_PIXELS:
+                    return _uncertain_result("IMAGE_DIMENSIONS_EXCEEDED")
                 source.verify()
             with Image.open(io.BytesIO(image_bytes)) as source:
                 image = source.convert("RGB")
