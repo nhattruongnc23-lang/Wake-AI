@@ -16,8 +16,11 @@ export async function GET(request) {
   if (!authorized(request)) return Response.json({ error: "Unauthorized" }, { status: 401 });
   const url = new URL(request.url);
   const limit = Math.min(Math.max(Number(url.searchParams.get("limit") || 20), 1), 50);
+  const guildId = url.searchParams.get("guildId");
+  if (guildId && !/^\\d{6,25}$/.test(guildId)) return Response.json({ error: "Invalid guild ID" }, { status: 400 });
   const cases = await prisma.moderationCase.findMany({
     where: {
+      ...(guildId ? { guildId } : {}),
       status: { in: ["CONFIRMED", "DISMISSED"] },
       decisionDeliveredAt: null,
       restricted: false,
