@@ -30,9 +30,11 @@ This branch is the new Wake Moderation workspace. The original Wake-AI branch re
    `http://localhost:3000/api/auth/callback/google`
 4. Put the OAuth client ID and secret in `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET`.
 5. Add the owner email to both `WAKE_ALLOWED_EMAILS` and `WAKE_OWNER_EMAIL`.
-6. Configure PostgreSQL in `DATABASE_URL`.
+6. Configure the Neon pooled connection in `DATABASE_URL` and the direct connection in `DIRECT_URL`. Keep both server-side only.
 7. Run `npm install`, `npm run db:push`, then `npm run dev`.
 8. Set a unique random `KORO_API_SECRET` of at least 32 characters. Configure the same value only in Koro's server environment.
+
+For Neon, use the pooled connection string (with the pooler host) for `DATABASE_URL`. Use the non-pooled connection string for `DIRECT_URL`, which Prisma uses for direct database operations such as schema changes. Never commit real credentials.
 
 The first allowed Google account matching WAKE_OWNER_EMAIL is assigned OWNER when its database account is created. Other allowlisted accounts default to VIEWER until an owner changes their role.
 
