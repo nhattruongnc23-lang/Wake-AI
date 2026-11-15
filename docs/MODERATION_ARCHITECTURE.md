@@ -15,14 +15,17 @@ Wake Moderation is the moderation dashboard and API service that works with the 
 3. Every API request validates authorization and input. Use rate limits and request-size limits at the edge.
 4. The dashboard is private; it is not a public media host.
 5. Do not persist raw sensitive media, attachment CDN URLs, or media copies in case records. Store minimal metadata and classifier results.
-6. Suspected sexual content involving minors, or content where age is unclear, must never be displayed, downloaded, forwarded, or given a reveal control. Route only minimal metadata through the restricted safety workflow and follow platform reporting requirements.
+6. Suspected sexual content involving minors, or content where age is unclear in a sexual context, must never be displayed, downloaded, forwarded, or given a reveal control. This restriction applies to every role, including OWNER. If uncertain, fail closed and route only minimal metadata through the restricted safety workflow.
 7. Classifier output is advisory. Human reviewers make decisions; no automatic punishment is issued by the classifier.
-8. Every review decision and privileged configuration change creates an audit record.
+8. Every review decision, evidence access attempt and privileged configuration change creates an audit record.
+9. Media evidence access is not implemented yet. Do not send or render media until the complete safety gate, authorization, audit and expiry controls are implemented.
 
 ## Roles
-- OWNER: full control, account and guild administration.
-- ADMIN: review cases and manage explicitly granted guild settings.
-- VIEWER: read-only access to permitted case metadata.
+- OWNER: full system control; can inspect media explicitly cleared for human review, reveal blurred eligible previews, make final review decisions, manage users and global settings, and view full audit history.
+- ADMIN: can inspect media explicitly cleared for human review, reveal blurred eligible previews and make review decisions within the assigned moderation scope; can view scoped audit history. Cannot manage users or global security settings.
+- VIEWER: read-only access to case metadata and classifier results. Cannot view media evidence, reveal previews or make review decisions.
+
+No role can override the mandatory restricted-media safety gate. The full role matrix and media handling requirements are defined in [docs/MEDIA_REVIEW_POLICY.md](./MEDIA_REVIEW_POLICY.md).
 
 The initial sign-in gate is WAKE_ALLOWED_EMAILS. Keep it restrictive. User roles are stored in PostgreSQL and must be assigned by an owner.
 
