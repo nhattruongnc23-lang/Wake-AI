@@ -45,7 +45,7 @@ Request body:
 }
 ```
 
-The endpoint updates an existing case by `externalCaseId`. It does not create cases and returns only case metadata. Configure `WAKE_ANALYZER_SECRET` independently from `KORO_API_SECRET`.
+The endpoint updates an existing case by `externalCaseId`. It does not create cases and returns only case metadata. Configure `WAKE_ANALYZER_SECRET` independently from `SYLEN_API_SECRET`.
 
 ## Important limitation
-This is the result-ingestion and policy foundation, not a functioning vision model. No model weights, image decoding, inference worker, image upload path or actual visual recognition are included. Koro continues to send metadata only. An isolated, privacy-reviewed inference worker must be selected and deployed before real images can be classified. Until then, cases remain UNCLASSIFIED and unavailable for review.
+This is the result-ingestion and policy foundation, not a functioning vision model. No model weights, image decoding, inference worker, image upload path or actual visual recognition are included. Sylen continues to send metadata only. An isolated, privacy-reviewed inference worker must be selected and deployed before real images can be classified. Until then, cases remain UNCLASSIFIED and unavailable for review.
