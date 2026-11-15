@@ -1,18 +1,18 @@
 # Wake Moderation
 
-Wake Moderation is the moderation dashboard and API service that works with the Koro Discord bot.
+Wake Moderation is the moderation dashboard and API service that works with the Sylen Discord bot.
 
 ## Services
 - Dashboard (Next.js): case queue, case details, review decisions, guild configuration, user access and audit history.
 - Authentication: Google OAuth through Auth.js. Google verifies identity; Wake Moderation applies its own account allowlist and database-backed roles.
-- API: authenticated endpoints for Koro ingestion and reviewer actions.
+- API: authenticated endpoints for Sylen ingestion and reviewer actions.
 - Database: PostgreSQL via Prisma. Stores case metadata, guild configuration, reviewer decisions and audit events.
 - Analyzer: a separate media-classification service. It returns labels and confidence; it does not decide punishments.
 - Visual Intelligence v0.1: metadata-only analyzer result endpoint at `POST /api/analyzer/results`, authenticated with `WAKE_ANALYZER_SECRET`. It separates visual style from safety category and fails closed on uncertain results. No image bytes or media URLs are accepted.
 
 ## Trust boundaries
 1. Google OAuth is for human dashboard accounts only.
-2. Koro uses a separate server-to-server credential. Never reuse a Google session or expose the bot credential to the browser.
+2. Sylen uses a separate server-to-server credential. Never reuse a Google session or expose the bot credential to the browser.
 3. Every API request validates authorization and input. Use rate limits and request-size limits at the edge.
 4. The dashboard is private; it is not a public media host.
 5. Do not persist raw sensitive media, attachment CDN URLs, or media copies in case records. Store minimal metadata and classifier results.
@@ -36,13 +36,13 @@ UNCLASSIFIED → PENDING → CONFIRMED or DISMISSED. Restricted cases are held o
 A case contains Discord IDs, timestamps, media type, classifier category/severity/confidence, safe text metadata where necessary, and review history. It must not contain raw media bytes or a publicly accessible media URL.
 
 ## Planned API boundaries
-- POST /api/bot/cases: Koro-only metadata ingestion endpoint, authenticated with a dedicated bot secret.
-- POST /api/bot/cases/events: Koro-only source-message lifecycle events and reviewed-decision delivery acknowledgements.
-- GET /api/bot/decisions: Koro-only polling endpoint for human-reviewed decisions not yet delivered to Discord.
+- POST /api/bot/cases: Sylen-only metadata ingestion endpoint, authenticated with a dedicated bot secret.
+- POST /api/bot/cases/events: Sylen-only source-message lifecycle events and reviewed-decision delivery acknowledgements.
+- GET /api/bot/decisions: Sylen-only polling endpoint for human-reviewed decisions not yet delivered to Discord.
 - GET /api/cases: authenticated dashboard case listing.
 - GET /api/cases/:id: authorized case metadata.
 - POST /api/cases/:id/review: owner/admin review action with audit logging.
 - GET/PUT /api/guilds/:id/config: authorized guild configuration.
 
 ## Environment
-See .env.example. Production requires HTTPS, a strong Auth.js secret, Google OAuth credentials, a PostgreSQL connection, an allowlist and a separate Koro API secret.
+See .env.example. Production requires HTTPS, a strong Auth.js secret, Google OAuth credentials, a PostgreSQL connection, an allowlist and a separate Sylen API secret.
