@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 function authorized(request) {
   const expected = process.env.KORO_API_SECRET || "";
-  const supplied = (request.headers.get("authorization") || "").replace(/^Bearer\\s+/i, "");
+  const supplied = (request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
   return expected.length >= 32 && supplied.length === expected.length &&
     timingSafeEqual(Buffer.from(supplied), Buffer.from(expected));
 }
@@ -24,7 +24,7 @@ export async function POST(request) {
 
   if (payload?.event !== "MESSAGE_DELETED" ||
       typeof payload.caseId !== "string" ||
-      !/^\\d{6,25}:\\d{6,25}$/.test(payload.caseId)) {
+      !/^\d{6,25}:\d{6,25}$/.test(payload.caseId)) {
     return Response.json({ error: "Invalid event payload" }, { status: 400 });
   }
 
@@ -32,9 +32,8 @@ export async function POST(request) {
     where: { externalCaseId: payload.caseId },
     select: { id: true, messageDeleted: true }
   });
-  if (!existing) {
-    return Response.json({ accepted: true, recorded: false }, { status: 202 });
-  }
+  if (!existing) return Response.json({ accepted: true, recorded: false }, { status: 202 });
+
   if (!existing.messageDeleted) {
     await prisma.$transaction([
       prisma.moderationCase.update({
