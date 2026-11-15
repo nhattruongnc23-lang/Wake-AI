@@ -30,7 +30,7 @@ export async function POST(request, { params }) {
   if (existing.restricted || existing.status === "RESTRICTED") {
     return Response.json({ error: "This case is restricted and cannot be reviewed in the standard queue." }, { status: 403 });
   }
-  if (existing.status !== "PENDING") {
+  if (existing.category === "UNKNOWN" || existing.status !== "PENDING") {
     return Response.json({ error: "This case has already been reviewed." }, { status: 409 });
   }
 
