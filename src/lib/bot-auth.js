@@ -3,7 +3,7 @@ import { timingSafeEqual } from "node:crypto";
 const MAX_BODY_BYTES = 64 * 1024;
 
 export function requireBotAuth(request) {
-  const expected = process.env.KORO_API_SECRET || "";
+  const expected = process.env.SYLEN_API_SECRET || "";
   const supplied = request.headers.get("authorization") || "";
   const match = supplied.match(/^Bearer (.+)$/i);
   const actual = match?.[1] || "";
