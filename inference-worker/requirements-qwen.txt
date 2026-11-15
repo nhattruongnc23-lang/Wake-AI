@@ -1,0 +1,7 @@
+# Optional model runtime; keep separate from the lightweight worker API.
+# Qwen's official Qwen3-VL instructions require Transformers >= 4.57.0.
+# Install a PyTorch build matching the host CPU/CUDA environment separately.
+torch>=2.6.0
+transformers>=4.57.0
+accelerate>=1.10.1
+Pillow>=11.0.0
