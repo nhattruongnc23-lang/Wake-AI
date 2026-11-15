@@ -6,7 +6,8 @@ export const dynamic = "force-dynamic";
 
 function authorized(request) {
   const expected = process.env.KORO_API_SECRET || "";
-  const supplied = (request.headers.get("authorization") || "").replace(/^Bearer\\s+/i, "");
+  const authorization = request.headers.get("authorization") || "";
+  const supplied = authorization.toLowerCase().startsWith("bearer ") ? authorization.slice(7).trim() : "";
   return expected.length >= 32 && supplied.length === expected.length &&
     timingSafeEqual(Buffer.from(supplied), Buffer.from(expected));
 }
@@ -17,7 +18,7 @@ export async function GET(request) {
   const url = new URL(request.url);
   const limit = Math.min(Math.max(Number(url.searchParams.get("limit") || 20), 1), 50);
   const guildId = url.searchParams.get("guildId");
-  if (guildId && !/^\\d{6,25}$/.test(guildId)) return Response.json({ error: "Invalid guild ID" }, { status: 400 });
+  if (guildId && (guildId.length < 6 || guildId.length > 25 || [...guildId].some(char => char < "0" || char > "9"))) return Response.json({ error: "Invalid guild ID" }, { status: 400 });
   const cases = await prisma.moderationCase.findMany({
     where: {
       ...(guildId ? { guildId } : {}),
