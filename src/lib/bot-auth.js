@@ -45,7 +45,7 @@ export async function readJsonBody(request, maxBytes = MAX_BODY_BYTES) {
 const forbiddenKey = /(?:image|mediaurl|attachmenturl|cdnurl|fileurl|base64|binary|buffer|rawmedia|previewurl|signedurl)/i;
 
 export function containsForbiddenMedia(value) {
-  if (typeof value === "string") return /^https?:\\/\\//i.test(value.trim());
+  if (typeof value === "string") return /^https?:/i.test(value.trim()) && value.trim().includes("://");
   if (!value || typeof value !== "object") return false;
   for (const [key, child] of Object.entries(value)) {
     const normalizedKey = key.replace(/[^a-z0-9]/gi, "");
