@@ -27,12 +27,13 @@ Wake Moderation is the moderation dashboard and API service that works with the 
 The initial sign-in gate is WAKE_ALLOWED_EMAILS. Keep it restrictive. User roles are stored in PostgreSQL and must be assigned by an owner.
 
 ## Case lifecycle
-PENDING → CONFIRMED or DISMISSED.
+UNCLASSIFIED → PENDING → CONFIRMED or DISMISSED. Restricted cases are held outside the normal review queue.
 
 A case contains Discord IDs, timestamps, media type, classifier category/severity/confidence, safe text metadata where necessary, and review history. It must not contain raw media bytes or a publicly accessible media URL.
 
 ## Planned API boundaries
-- POST /api/bot/cases: Koro-only ingestion endpoint, authenticated with a dedicated bot secret or signed request.
+- POST /api/bot/cases: Koro-only metadata ingestion endpoint, authenticated with a dedicated bot secret.
+- POST /api/bot/cases/events: Koro-only source-message lifecycle events (currently deletion markers).
 - GET /api/cases: authenticated dashboard case listing.
 - GET /api/cases/:id: authorized case metadata.
 - POST /api/cases/:id/review: owner/admin review action with audit logging.
