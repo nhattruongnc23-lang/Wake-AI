@@ -3,7 +3,7 @@ import "./moderation.css";
 
 export const metadata = {
   title: "Wake Moderation",
-  description: "Private moderation workspace for Koro."
+  description: "Private moderation workspace for Sylen."
 };
 
 export default function RootLayout({ children }) {
