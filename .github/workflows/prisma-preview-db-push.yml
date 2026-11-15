@@ -1,0 +1,90 @@
+name: Prisma Preview Database Setup
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type PREVIEW to confirm this targets the Neon preview branch only'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prisma-preview-db-push
+  cancel-in-progress: false
+
+jobs:
+  push-preview-schema:
+    if: ${{ inputs.confirmation == 'PREVIEW' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DATABASE_URL: ${{ secrets.PREVIEW_DATABASE_URL }}
+      DIRECT_URL: ${{ secrets.PREVIEW_DIRECT_URL }}
+    steps:
+      - name: Checkout selected branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/wake-moderation
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Validate preview-only Neon connection settings
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$DATABASE_URL" || { echo "Missing PREVIEW_DATABASE_URL secret"; exit 1; }
+          test -n "$DIRECT_URL" || { echo "Missing PREVIEW_DIRECT_URL secret"; exit 1; }
+          node --input-type=module <<'NODE'
+          const pooled = new URL(process.env.DATABASE_URL);
+          const direct = new URL(process.env.DIRECT_URL);
+          if (!pooled.hostname.endsWith(".neon.tech") || !direct.hostname.endsWith(".neon.tech")) {
+            throw new Error("Both URLs must point to Neon hosts.");
+          }
+          if (!pooled.hostname.includes("-pooler")) {
+            throw new Error("PREVIEW_DATABASE_URL must use Neon connection pooling.");
+          }
+          if (direct.hostname.includes("-pooler")) {
+            throw new Error("PREVIEW_DIRECT_URL must be a direct, non-pooled connection.");
+          }
+          if (pooled.pathname !== direct.pathname) {
+            throw new Error("Pooled and direct URLs must target the same database.");
+          }
+          console.log("Neon URL shape checks passed; credentials are not displayed.");
+          NODE
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Push Prisma schema to Neon Preview
+        run: npx prisma db push --skip-generate
+
+      - name: Verify database connectivity and expected tables
+        run: |
+          node --input-type=module <<'NODE'
+          import { PrismaClient } from "@prisma/client";
+          const prisma = new PrismaClient();
+          try {
+            const rows = await prisma.$queryRaw`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name`;
+            const names = rows.map((row) => row.table_name);
+            const expected = ["User", "Account", "Session", "VerificationToken", "GuildConfig", "ModerationCase", "AuditLog"];
+            const missing = expected.filter((name) => !names.includes(name));
+            console.log("Database connection: OK");
+            console.log("Public tables:", names.join(", ") || "(none)");
+            if (missing.length) {
+              throw new Error("Expected Prisma tables are missing: " + missing.join(", "));
+            }
+            console.log("Expected Wake tables verified.");
+          } finally {
+            await prisma.$disconnect();
+          }
+          NODE
