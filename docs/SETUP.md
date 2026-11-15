@@ -15,9 +15,9 @@
 - WAKE_ALLOWED_EMAILS
 - WAKE_OWNER_EMAIL
 - DATABASE_URL
-- KORO_API_SECRET
+- SYLEN_API_SECRET
 
-Generate AUTH_SECRET with a cryptographically secure random generator. Use a separate random value for KORO_API_SECRET. Never put either value in NEXT_PUBLIC_* variables.
+Generate AUTH_SECRET with a cryptographically secure random generator. Use a separate random value for SYLEN_API_SECRET. Never put either value in NEXT_PUBLIC_* variables.
 
 ## Database
 Run:
@@ -30,5 +30,5 @@ For production, use managed PostgreSQL, backups, TLS and a reviewed migration wo
 ## First owner
 Set WAKE_OWNER_EMAIL to the exact verified Google email and include it in WAKE_ALLOWED_EMAILS. The first time that account is created, the Auth.js create-user event assigns OWNER. Existing accounts need an explicit role update by an authorized operator.
 
-## Koro connection
-Configure Koro with the deployed Wake Moderation API base URL and the same KORO_API_SECRET. Send only validated metadata to POST /api/bot/cases over HTTPS. Do not send attachment bytes, media URLs, or sensitive content to the dashboard.
+## Sylen connection
+Configure Sylen with the deployed Wake Moderation API base URL and the same SYLEN_API_SECRET. Send only validated metadata to POST /api/bot/cases over HTTPS. Do not send attachment bytes, media URLs, or sensitive content to the dashboard.
