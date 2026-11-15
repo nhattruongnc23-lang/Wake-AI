@@ -1,0 +1,25 @@
+name: Inference Worker CI
+
+on:
+  push:
+    branches: ["main", "feat/**"]
+    paths:
+      - "inference-worker/**"
+      - ".github/workflows/inference-worker-ci.yml"
+  pull_request:
+    paths:
+      - "inference-worker/**"
+      - ".github/workflows/inference-worker-ci.yml"
+
+jobs:
+  benchmark-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run benchmark runner tests
+        run: python -m unittest discover -s inference-worker/benchmark -p "test_*.py" -v
+      - name: Check runner syntax
+        run: python -m py_compile inference-worker/benchmark/runner.py
