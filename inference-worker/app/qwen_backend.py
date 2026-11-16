@@ -55,7 +55,7 @@ def _parse_output(text: str) -> VisualResult:
     if not isinstance(text, str):
         return _uncertain_result("INVALID_MODEL_OUTPUT")
     try:
-        match = re.fullmatch(r"\s*(?:\`\`\`json\s*)?(\{.*\})(?:\s*\`\`\`)?\s*", text, re.DOTALL)
+        match = re.fullmatch(r"\s*(\{.*\})\s*", text, re.DOTALL)
         if not match:
             return _uncertain_result("INVALID_MODEL_OUTPUT")
         payload = json.loads(match.group(1))
@@ -83,14 +83,14 @@ def _parse_output(text: str) -> VisualResult:
             confidence=float(confidence),
             signals=["STYLE_ONLY_CLASSIFICATION"],
         ).fail_closed()
-    except (ValueError, TypeError, json.JSONDecodeError):
+    except (ValueError, TypeError, OverflowError, json.JSONDecodeError):
         return _uncertain_result("INVALID_MODEL_OUTPUT")
 
 
 def _bounded_timeout(value: str | float | int, default: float = 30.0) -> float:
     try:
         parsed = float(value)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return default
     if not math.isfinite(parsed):
         return default
