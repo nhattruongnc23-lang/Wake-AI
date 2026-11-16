@@ -5,6 +5,7 @@ fields UNCERTAIN/UNKNOWN so a general-purpose VLM cannot clear moderation risk.
 """
 import io
 import json
+import math
 import os
 import re
 import time
@@ -13,10 +14,20 @@ from typing import Any
 from .backend import VisionBackend
 from .contracts import Category, SafetyGate, Severity, VisualResult, VisualStyle
 
+DEFAULT_MODEL_ID = "Qwen/Qwen3-VL-8B-Instruct"
+# Hugging Face model-card revision checked on 2026-11-16; license metadata is
+# Apache-2.0. Pinning avoids silently changing the reviewed checkpoint.
+VERIFIED_MODEL_REVISION = "a115a837cf3cbba4b697aa74b609721b5009ed41"
+
 _ALLOWED_MIME = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 _MAX_IMAGE_BYTES = 8 * 1024 * 1024
 _MAX_IMAGE_PIXELS = 16_000_000
-_MIME_FORMATS = {"image/jpeg": {"JPEG"}, "image/png": {"PNG"}, "image/webp": {"WEBP"}, "image/gif": {"GIF"}}
+_MIME_FORMATS = {
+    "image/jpeg": {"JPEG"},
+    "image/png": {"PNG"},
+    "image/webp": {"WEBP"},
+    "image/gif": {"GIF"},
+}
 _STYLE_LABELS = {item.value for item in VisualStyle}
 _PROMPT = """Classify only the broad visual presentation style of this image.
 Choose exactly one label from: REAL_PHOTO, ANIME_MANGA,
@@ -41,8 +52,10 @@ def _uncertain_result(signal: str = "MODEL_UNAVAILABLE") -> VisualResult:
 
 def _parse_output(text: str) -> VisualResult:
     """Strictly parse model output; anything unexpected abstains."""
+    if not isinstance(text, str):
+        return _uncertain_result("INVALID_MODEL_OUTPUT")
     try:
-        match = re.fullmatch(r"\s*(?:```json\s*)?(\{.*\})(?:\s*```)?\s*", text, re.DOTALL)
+        match = re.fullmatch(r"\s*(?:\`\`\`json\s*)?(\{.*\})(?:\s*\`\`\`)?\s*", text, re.DOTALL)
         if not match:
             return _uncertain_result("INVALID_MODEL_OUTPUT")
         payload = json.loads(match.group(1))
@@ -50,9 +63,14 @@ def _parse_output(text: str) -> VisualResult:
             return _uncertain_result("INVALID_MODEL_SCHEMA")
         style = payload["style"]
         confidence = payload["confidence"]
-        if style not in _STYLE_LABELS:
+        if not isinstance(style, str) or style not in _STYLE_LABELS:
             return _uncertain_result("INVALID_MODEL_STYLE")
-        if isinstance(confidence, bool) or not isinstance(confidence, (int, float)) or not 0 <= confidence <= 1:
+        if (
+            isinstance(confidence, bool)
+            or not isinstance(confidence, (int, float))
+            or not math.isfinite(float(confidence))
+            or not 0 <= confidence <= 1
+        ):
             return _uncertain_result("INVALID_MODEL_CONFIDENCE")
         if style == VisualStyle.UNKNOWN.value:
             return _uncertain_result("MODEL_ABSTAINED")
@@ -67,6 +85,16 @@ def _parse_output(text: str) -> VisualResult:
         ).fail_closed()
     except (ValueError, TypeError, json.JSONDecodeError):
         return _uncertain_result("INVALID_MODEL_OUTPUT")
+
+
+def _bounded_timeout(value: str | float | int, default: float = 30.0) -> float:
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        return default
+    if not math.isfinite(parsed):
+        return default
+    return min(max(parsed, 1.0), 120.0)
 
 
 class Qwen3VLBackend(VisionBackend):
@@ -89,14 +117,25 @@ class Qwen3VLBackend(VisionBackend):
         max_new_tokens: int = 96,
         loader: Any = None,
     ):
-        self.model_id = model_id or os.getenv("WAKE_QWEN_MODEL_ID", "Qwen/Qwen3-VL-8B-Instruct")
-        self.revision = revision or os.getenv("WAKE_QWEN_REVISION") or None
+        self.model_id = model_id or os.getenv("WAKE_QWEN_MODEL_ID", DEFAULT_MODEL_ID)
+        requested_revision = revision or os.getenv("WAKE_QWEN_REVISION") or None
+        self.revision = requested_revision or (
+            VERIFIED_MODEL_REVISION if self.model_id == DEFAULT_MODEL_ID else None
+        )
         self.device_map = device_map or os.getenv("WAKE_QWEN_DEVICE_MAP", "auto")
         if local_files_only is None:
-            local_files_only = os.getenv("WAKE_QWEN_LOCAL_FILES_ONLY", "true").lower() not in {"0", "false", "no"}
+            local_files_only = os.getenv("WAKE_QWEN_LOCAL_FILES_ONLY", "true").lower() not in {
+                "0", "false", "no"
+            }
         self.local_files_only = local_files_only
-        self.max_new_tokens = max(16, min(int(max_new_tokens), 128))
-        self.generation_timeout_seconds = max(1.0, float(os.getenv("WAKE_QWEN_GENERATION_TIMEOUT_SECONDS", "30")))
+        try:
+            token_limit = int(max_new_tokens)
+        except (TypeError, ValueError):
+            token_limit = 96
+        self.max_new_tokens = min(max(token_limit, 16), 128)
+        self.generation_timeout_seconds = _bounded_timeout(
+            os.getenv("WAKE_QWEN_GENERATION_TIMEOUT_SECONDS", "30")
+        )
         self._loader = loader
         self._model = None
         self._processor = None
@@ -104,16 +143,13 @@ class Qwen3VLBackend(VisionBackend):
     def _load(self):
         if self._model is not None and self._processor is not None:
             return self._model, self._processor
-        if self.local_files_only and not self._loader:
-            # Hugging Face libraries honor local_files_only on both calls.
-            pass
-        if self._loader:
+        if self._loader is not None:
             model, processor = self._loader(
                 self.model_id, self.revision, self.device_map, self.local_files_only
             )
         else:
             try:
-                import torch
+                import torch  # noqa: F401
                 from transformers import AutoProcessor, Qwen3VLForConditionalGeneration
             except ImportError as exc:
                 raise RuntimeError(
@@ -138,21 +174,29 @@ class Qwen3VLBackend(VisionBackend):
 
     def analyze(self, image_bytes: bytes, mime_type: str) -> VisualResult:
         try:
-            if not isinstance(image_bytes, bytes) or not image_bytes or len(image_bytes) > _MAX_IMAGE_BYTES:
+            if (
+                not isinstance(image_bytes, bytes)
+                or not image_bytes
+                or len(image_bytes) > _MAX_IMAGE_BYTES
+            ):
                 return _uncertain_result("INVALID_IMAGE_INPUT")
-            if mime_type not in _ALLOWED_MIME:
+            if not isinstance(mime_type, str) or mime_type not in _ALLOWED_MIME:
                 return _uncertain_result("UNSUPPORTED_IMAGE_MIME")
 
             from PIL import Image
-            with Image.open(io.BytesIO(image_bytes)) as source:
-                if source.format not in _MIME_FORMATS[mime_type]:
-                    return _uncertain_result("IMAGE_MIME_MISMATCH")
-                width, height = source.size
-                if width < 1 or height < 1 or width * height > _MAX_IMAGE_PIXELS:
-                    return _uncertain_result("IMAGE_DIMENSIONS_EXCEEDED")
-                source.verify()
-            with Image.open(io.BytesIO(image_bytes)) as source:
-                image = source.convert("RGB")
+            try:
+                with Image.open(io.BytesIO(image_bytes)) as source:
+                    if source.format not in _MIME_FORMATS[mime_type]:
+                        return _uncertain_result("IMAGE_MIME_MISMATCH")
+                    width, height = source.size
+                    if width < 1 or height < 1 or width * height > _MAX_IMAGE_PIXELS:
+                        return _uncertain_result("IMAGE_DIMENSIONS_EXCEEDED")
+                    source.verify()
+                with Image.open(io.BytesIO(image_bytes)) as source:
+                    source.seek(0)
+                    image = source.convert("RGB")
+            except Exception:
+                return _uncertain_result("INVALID_IMAGE_INPUT")
 
             model, processor = self._load()
             messages = [{
@@ -169,10 +213,11 @@ class Qwen3VLBackend(VisionBackend):
                 return_dict=True,
                 return_tensors="pt",
             )
+            if hasattr(inputs, "pop"):
+                inputs.pop("token_type_ids", None)
             if hasattr(inputs, "to"):
                 inputs = inputs.to(model.device)
-            if isinstance(inputs, dict):
-                inputs.pop("token_type_ids", None)
+
             import torch
             started_at = time.monotonic()
             with torch.inference_mode():
@@ -182,8 +227,11 @@ class Qwen3VLBackend(VisionBackend):
                     max_time=self.generation_timeout_seconds,
                     do_sample=False,
                 )
+            # Transformers max_time is best-effort. This post-check rejects a
+            # late result; a process supervisor is still needed for hard kills.
             if time.monotonic() - started_at > self.generation_timeout_seconds:
                 return _uncertain_result("MODEL_TIMEOUT")
+
             input_ids = inputs["input_ids"]
             trimmed = [out[len(inp):] for inp, out in zip(input_ids, generated)]
             decoded = processor.batch_decode(

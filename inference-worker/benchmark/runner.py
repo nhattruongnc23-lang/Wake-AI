@@ -95,7 +95,14 @@ def evaluate(truth, predictions):
         "macro_f1": round(statistics.mean(f1s), 4) if f1s else 0.0,
         "minimum_non_unknown_class_recall": round(min(recalls), 4) if recalls else 0.0,
         "schema_valid_rate": round(schema_valid / count, 4),
-        "unknown_prediction_rate": round(sum(1 for sid in truth if predictions.get(sid, {}).get("label") == "UNKNOWN") / count, 4),
+        # Missing predictions are abstentions and must count as UNKNOWN.
+        "unknown_prediction_rate": round(
+            sum(
+                1 for sid in truth
+                if predictions.get(sid, {}).get("label", "UNKNOWN") == "UNKNOWN"
+            ) / count,
+            4,
+        ),
         "latency_ms": {"p50": percentile(latencies, 0.50), "p95": percentile(latencies, 0.95)},
         "per_class": per_class,
         "confusion_matrix": {actual: {predicted: matrix[actual][predicted] for predicted in LABELS} for actual in LABELS},

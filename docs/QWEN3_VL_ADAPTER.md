@@ -1,33 +1,52 @@
 # Qwen3-VL-8B-Instruct adapter
 
-## Verified model/runtime references
+## Verified checkpoint and runtime
 
-- Exact checkpoint: `Qwen/Qwen3-VL-8B-Instruct`.
-- Hugging Face model card metadata declares `apache-2.0`.
-- Official Qwen3-VL README states Transformers `>=4.57.0` is required and demonstrates the Transformers processor/model generation flow.
-- The adapter uses the official `Qwen3VLForConditionalGeneration` and `AutoProcessor` APIs. PyTorch must be installed using a build appropriate for the worker host; it is intentionally not pinned in the core worker requirements.
+- Exact checkpoint: \`Qwen/Qwen3-VL-8B-Instruct\`.
+- Reviewed Hugging Face revision: \`a115a837cf3cbba4b697aa74b609721b5009ed41\`.
+- The model-card metadata for that checkpoint revision declares \`apache-2.0\`.
+- The official Qwen3-VL README requires Transformers \`>=4.57.0\` and documents \`Qwen3VLForConditionalGeneration\` with \`AutoProcessor\`.
+- The optional runtime manifest keeps Transformers below 6.x and uses PyTorch 2.6+; install a PyTorch wheel matching the target host's CPU/CUDA build. These are project compatibility bounds, not a claim that upstream specifies an exact PyTorch minimum.
 
 References:
-- https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct
+- https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct/tree/a115a837cf3cbba4b697aa74b609721b5009ed41
 - https://github.com/QwenLM/Qwen3-VL
 
-Recheck the exact revision's license metadata and dependencies before distributing model weights or a derivative.
+Recheck the exact revision's license metadata and preserve the Apache-2.0 license and attribution notices before redistributing weights or derivatives.
 
 ## Adapter contract
 
-`Qwen3VLBackend` implements `VisionBackend.analyze(image_bytes, mime_type) -> VisualResult`. The backend is injected through the existing abstract contract; model imports and weight loading are lazy. Local-only loading is the default, so this code does not fetch weights.
+\`Qwen3VLBackend\` implements \`VisionBackend.analyze(image_bytes, mime_type) -> VisualResult\`. Model imports and weight loading are lazy. The default model revision is pinned to the reviewed checkpoint; \`WAKE_QWEN_MODEL_ID\`, \`WAKE_QWEN_REVISION\`, and \`WAKE_QWEN_DEVICE_MAP\` allow controlled overrides.
 
-## Deliberate limitation
+Local-only loading is the default (\`WAKE_QWEN_LOCAL_FILES_ONLY=true\`). The adapter will not fetch model weights when they are absent from the local cache. No weights were downloaded while building or testing this adapter.
 
-The adapter is a visual-style classifier only. Even valid model output leaves Wake's safety fields as:
-- `safetyGate=UNCERTAIN`
-- `category=UNKNOWN`
-- `severity=UNKNOWN`
+Optional runtime dependencies are isolated in \`inference-worker/requirements-qwen.txt\`. The lightweight worker requirements do not install PyTorch or Transformers.
 
-Wake's existing fail-closed policy consequently keeps the result restricted. The model is not trusted to determine whether an image is safe, sexual, violent, graphic, or whether a depicted person's age is known. A separate, policy-reviewed classifier and test programme would be required before any future safety-gate integration.
+## Safety boundary
 
-Malformed output, invalid inputs, timeout, model-loading failures, and inference errors return UNKNOWN/RESTRICTED. Transformers' `max_time` is a best-effort generation budget, not a hard process-kill deadline; a stuck native kernel still requires an external worker/process supervisor to enforce a hard wall-clock limit. The adapter does not persist or log image bytes, retrieve URLs, expose media, or provide an HTTP upload route.
+This adapter classifies visual style only. Even valid model output leaves Wake's safety fields non-clear:
+- \`safetyGate=UNCERTAIN\` internally, then \`RESTRICTED\` through the existing fail-closed contract
+- \`category=UNKNOWN\`
+- \`severity=UNKNOWN\`
 
-## Resource preflight
+It therefore cannot clear a moderation case. The model is not trusted to determine whether an image is safe, sexual, violent, graphic, or whether a depicted person's age is known. A separate, policy-reviewed safety classifier and test programme would be required before any future safety-gate integration.
 
-Run `python inference-worker/benchmark/runtime_preflight.py` before provisioning weights. The check is offline-only and reports installed packages, RAM, free disk, CUDA/VRAM, and whether checkpoint files are already cached. The current Hugging Face repository listing is about 17.5 GB; the preflight uses 25 GiB free disk as a buffer target. Its 32 GiB RAM and 24 GiB single-GPU VRAM targets are planning guidance, not guarantees. No model weights have been downloaded as part of this work.
+Malformed output, invalid image input, unsupported MIME, timeout, model-loading failures, and inference errors return UNKNOWN/RESTRICTED. Transformers' \`max_time\` is a best-effort generation budget, not a hard process-kill deadline; a stuck native kernel still requires an external worker/process supervisor to enforce a hard wall-clock limit.
+
+Image bytes are processed in memory only. The adapter enforces an 8 MiB compressed-size limit, verifies actual image format against MIME, and rejects images above 16 megapixels. It does not persist or log image bytes, retrieve image URLs, expose media, or provide an HTTP upload route.
+
+## Tests and preflight
+
+Tests use only a generated 2×2 white PNG fixture and mocked model/processor outputs. They do not load model weights or call external services.
+
+Run from repository root:
+
+\`\`\`bash
+python -m pip install -r inference-worker/requirements.txt Pillow
+python -m unittest discover -s inference-worker/benchmark -p "test_*.py" -v
+PYTHONPATH=inference-worker python -m unittest discover -s inference-worker/tests -p "test_*.py" -v
+python -m compileall -q inference-worker/app inference-worker/benchmark inference-worker/tests
+python inference-worker/benchmark/runtime_preflight.py
+\`\`\`
+
+The runtime preflight is offline-only. It checks optional packages, RAM, free disk, CUDA/VRAM, and whether checkpoint files are already cached. It never downloads weights.
